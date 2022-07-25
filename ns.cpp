@@ -4,14 +4,19 @@
 #include <windows.h>
 #include <Shlwapi.h>
 #include <string>
+#include "log/log.h"
+#include "navtex/navtex.h"
 
+const char *SVC_EVT_NAME = "NavtexServiceStopEvt";
 const char *SVC_NAME = "NavtexService";
 const char *SVC_DISPLAY_NAME = "Navtex Service";
 const int SVC_ERROR = 1000;
 
 SERVICE_STATUS svcStatus; 
-SERVICE_STATUS_HANDLE svcStatusHandle; 
+SERVICE_STATUS_HANDLE svcStatusHandle = nullptr; 
 HANDLE svcStopEvent = nullptr;
+HANDLE worker = nullptr;
+Logger *logger = nullptr;
 
 bool isAdmin () {
     BOOL admin = false;
@@ -75,21 +80,38 @@ bool checkElevate (bool *exiting, char *cmdLine) {
     return result;
 }
 
+void __log (char *str) {
+    wchar_t buffer [500];
+    MultiByteToWideChar (CP_ACP, 0, str, -1, buffer, 500);
+    logger->addLogRecord (buffer);
+}
+
 void log (char *string) {
-    printf (string);
+    printf ("%s\n", string);
+    __log (string);
 }
 
 void log (char *fmt, unsigned long arg) {
-    printf (fmt, arg);
+    char buffer [500];
+    sprintf (buffer, fmt, arg);
+    printf ("%s\n", buffer);
+    __log (buffer);
 }
 
 void log (char *fmt, const char *arg) {
     printf (fmt, arg);
+    char buffer [500];
+    sprintf (buffer, fmt, arg);
+    __log (buffer);
 }
 
 void logLastError (char *fmt) {
+    char buffer [500];
     std::string fmtStr { fmt };
-    printf ((fmtStr + ", error %d\n").c_str (), GetLastError ());
+    fmtStr += ", error %d";
+    sprintf (buffer, fmtStr.c_str (), GetLastError ());
+    printf ("%s\n", buffer);
+    __log (buffer);
 }
 
 void installService (bool autoMode) {
@@ -115,7 +137,7 @@ void installService (bool autoMode) {
         scmHandle,                                              // SCM database 
         SVC_NAME,                                               // name of service 
         SVC_DISPLAY_NAME,                                       // service name to display 
-        SERVICE_ALL_ACCESS,                                     // desired access 
+        SERVICE_QUERY_STATUS,                                   // desired access 
         SERVICE_WIN32_OWN_PROCESS,                              // service type 
         autoMode ? SERVICE_AUTO_START : SERVICE_DEMAND_START,   // start type 
         SERVICE_ERROR_NORMAL,                                   // error control type 
@@ -136,7 +158,26 @@ void installService (bool autoMode) {
     CloseServiceHandle (serviceHandle); 
     CloseServiceHandle (scmHandle);
 
-    log ("Service has been installed%s.\n", autoMode ? " in auto mode" : "");
+    log ("Service has been installed%s.", autoMode ? " in auto mode" : "");
+}
+
+void startService (int argCount, char *args []) {
+    auto manager = OpenSCManager (nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
+
+    if (manager) {
+        auto service = OpenService (manager, SVC_NAME, SC_MANAGER_ALL_ACCESS);
+
+        if (service) {
+            StartService (service, argCount, (const char **) args);
+            CloseServiceHandle (service);
+            log ("Service has been started.");
+        } else {
+            logLastError ("Unable to start service");
+        }
+        CloseServiceHandle (manager);
+    } else {
+        logLastError ("Unable to open SCM");
+    }
 }
 
 void uninstallService () {
@@ -148,7 +189,7 @@ void uninstallService () {
         if (service) {
             DeleteService (service);
             CloseServiceHandle (service);
-            log ("Service has been uninstalled.\n");
+            log ("Service has been uninstalled.");
         } else {
             logLastError ("Unable to delete service");
         }
@@ -158,15 +199,27 @@ void uninstallService () {
     }
 }
 
-void startService () {
-    printf ("Service has been started.\n");
-}
-
 void stopService () {
-    printf ("Service has been stopped.\n");
+    auto manager = OpenSCManager (nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
+
+    if (manager) {
+        auto service = OpenService (manager, SVC_NAME, SC_MANAGER_ALL_ACCESS);
+
+        if (service) {
+            SERVICE_STATUS status;
+            ControlService (service, SERVICE_CONTROL_STOP, & status);
+            CloseServiceHandle (service);
+            log ("Service is stopping...");
+        } else {
+            logLastError ("Unable to start service");
+        }
+        CloseServiceHandle (manager);
+    } else {
+        logLastError ("Unable to open SCM");
+    }
 }
 
-void showUsageAndExit () {
+void showUsage () {
     printf (
         "\nUSAGE:\n"
         "\tNS options\n"
@@ -177,27 +230,16 @@ void showUsageAndExit () {
         "\t-s\t starts the service\n"
         "\t-p\t stops the service\n"
     );
-    exit (0);
 }
 
-void ReportSvcStatus (unsigned long currentState, unsigned long win32ExitCode, unsigned long waitHint) {
+void ReportSvcStatus (unsigned long currentState, unsigned long exitCode, unsigned long waitHint) {
     static unsigned long checkPoint = 1;
 
     svcStatus.dwCurrentState = currentState;
-    svcStatus.dwWin32ExitCode = win32ExitCode;
+    svcStatus.dwWin32ExitCode = exitCode;
     svcStatus.dwWaitHint = waitHint;
-
-    if (currentState == SERVICE_START_PENDING) {
-        svcStatus.dwControlsAccepted = 0;
-    } else {
-        svcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
-    }
-
-    if (currentState == SERVICE_RUNNING || currentState == SERVICE_STOPPED) {
-        svcStatus.dwCheckPoint = 0;
-    } else {
-        svcStatus.dwCheckPoint = checkPoint ++;
-    }
+    svcStatus.dwCheckPoint = ((currentState == SERVICE_RUNNING) || (currentState == SERVICE_STOPPED)) ? 0 : checkPoint ++;
+    svcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 
     SetServiceStatus (svcStatusHandle, & svcStatus);
 }
@@ -205,13 +247,11 @@ void ReportSvcStatus (unsigned long currentState, unsigned long win32ExitCode, u
 void WINAPI svcCtrlHandler (unsigned long ctrl) {
     switch (ctrl) {  
         case SERVICE_CONTROL_STOP: {
+            __log ("Stopping the service...");
             ReportSvcStatus (SERVICE_STOP_PENDING, NO_ERROR, 0);
             SetEvent (svcStopEvent);
             ReportSvcStatus (svcStatus.dwCurrentState, NO_ERROR, 0);
             break;
-        }
-        case SERVICE_CONTROL_INTERROGATE: {
-            break; 
         }
         default: {
             break;
@@ -219,27 +259,61 @@ void WINAPI svcCtrlHandler (unsigned long ctrl) {
    } 
 }
 
+void doSvcIteration (unsigned long argCount, char *args []) {
+
+}
+
+unsigned long workerProc (void *) {
+    ReloadSettings ();
+
+    while (WaitForSingleObject (svcStopEvent, 0) == WAIT_TIMEOUT) {
+        doSvcIteration (0, nullptr);
+        Sleep (10);
+    }
+
+    ReportSvcStatus (SERVICE_STOPPED, NO_ERROR, 0);
+    CloseHandle (svcStopEvent);
+
+    return 0;
+}
+
 void svcInit (unsigned long argCount, char *args []) {
-    svcStopEvent = CreateEvent (nullptr, TRUE, FALSE, nullptr);
+    svcStopEvent = CreateEvent (nullptr, TRUE, FALSE, SVC_EVT_NAME);
 
     if  (!svcStopEvent) {
+        __log ("Unable to create sync event");
         ReportSvcStatus (SERVICE_STOPPED, GetLastError (), 0);
         return;
     }
 
     ReportSvcStatus (SERVICE_RUNNING, NO_ERROR, 0);
 
-    while (true) {
-        WaitForSingleObject (svcStopEvent, INFINITE);
-        ReportSvcStatus (SERVICE_STOPPED, NO_ERROR, 0);
-        return;
+    __log ("Running the loop");
+
+    worker = CreateThread (nullptr, 0, workerProc, nullptr, 0, nullptr);
+#if 0
+    #if 1
+    //WaitForSingleObject (svcStopEvent, INFINITE);
+    #else
+    while (WaitForSingleObject (svcStopEvent, 0) == WAIT_TIMEOUT) {
+        doSvcIteration (argCount, args);
+        Sleep (10);
     }
+    #endif
+
+    __log ("Loop finished");
+    
+    ReportSvcStatus (SERVICE_STOPPED, NO_ERROR, 0);
+    CloseHandle (svcStopEvent);
+#endif
 }
 
 void WINAPI svcMain (unsigned long argCount, char *args []) {
-    auto handler = RegisterServiceCtrlHandler (SVC_NAME, svcCtrlHandler);
+    svcStatusHandle = RegisterServiceCtrlHandler (SVC_NAME, svcCtrlHandler);
 
-    if (!handler) {
+    if (svcStatusHandle) {
+        __log ("svcMain called.");
+    } else {
         logLastError ("Unable to register service control handler, error %d\n");
         exit (0);
     }
@@ -285,35 +359,58 @@ int main (int argCount, char *args []) {
     bool exiting;
 
     //checkElevate (& exiting, GetCommandLine ());
+    printf ("Navtex ServiceTool\n");
 
-    printf ("Navtex ServuiceTool\n");
+    static wchar_t path [MAX_PATH];
+    GetModuleFileNameW (nullptr, path, MAX_PATH);
+    PathRemoveFileSpecW (path);
+    PathAppendW (path, L"ns.log");
+    
+    logger = new Logger (path);
+    logger->start ();
 
-    if (argCount < 2) showUsageAndExit ();
+    bool insideService = false;
 
-    for (int i = 1; i < argCount; ++ i) {
-        char *arg = args [i];
+    if (argCount < 2) {
+        insideService = true;
+    } else {
+        for (int i = 1; i < argCount; ++ i) {
+            char *arg = args [i];
 
-        if (arg [0] != '-' && arg [0] != '/') showUsageAndExit ();
+            if (arg [0] != '-' && arg [0] != '/') showUsage ();
 
-        switch (toupper (arg [1])) {
-            case 'I': installService (toupper (arg[2]) == 'A'); exit (0);
-            case 'U': uninstallService (); exit (0);
-            case 'S': startService (); break;
-            case 'P': stopService (); break;
-            case 'H':
-            default:  showUsageAndExit ();
+            switch (toupper (arg [1])) {
+                case 'I': installService (toupper (arg[2]) == 'A'); break;
+                case 'U': uninstallService (); break;
+                case 'S': startService (argCount, args); break;
+                case 'P': stopService (); break;
+                case 'H': showUsage (); break;
+                default: insideService = true;
+            }
         }
     }
 
-    SERVICE_TABLE_ENTRY dispatchTable [] { 
-        { (char *) SVC_NAME, (SERVICE_MAIN_FUNCTION *) svcMain }, 
-        { nullptr, nullptr } 
-    }; 
+    if (insideService) {
+        SERVICE_TABLE_ENTRY dispatchTable [] { 
+            { (char *) SVC_NAME, (SERVICE_MAIN_FUNCTION *) svcMain }, 
+            { nullptr, nullptr } 
+        }; 
 
-    if (!StartServiceCtrlDispatcher (dispatchTable)) { 
-        log ("Unable to start StartServiceCtrlDispatcher");
-        exit (0);
+        __log ("Running main service thread.");
+        
+        if (StartServiceCtrlDispatcher (dispatchTable)) {
+            log ("StartServiceCtrlDispatcher has been started.");
+        } else {
+            logLastError ("Unable to start StartServiceCtrlDispatcher");
+        }
     }
+
+    if (WaitForSingleObject (worker, 3000) == WAIT_TIMEOUT) {
+        TerminateThread (worker, 0);
+    }
+    
+    logger->stop ();
+    delete logger;
 
     return 0;
 }
