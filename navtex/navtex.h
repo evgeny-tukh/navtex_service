@@ -1,11 +1,20 @@
 #pragma once
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
-int __declspec (dllexport) StartNavtexReceiver (wchar_t *pathToDb);
-void __declspec (dllexport) StopNavtexReceiver ();
-void __declspec( dllexport) ReloadSettings ();
-void __declspec (dllexport) StartLog (wchar_t *file);
-void __declspec (dllexport) StopLog ();
+#include "defs.h"
 
+typedef void (*MsgCb) (wchar_t *);
+
+int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb);
+void NAVTEX_API StopNavtexReceiver ();
+void NAVTEX_API ReloadSettings ();
+void NAVTEX_API StartLog (wchar_t *file);
+void NAVTEX_API StopLog ();
+void NAVTEX_API SetMsgCb (MsgCb cb);
+
+#ifdef __cplusplus
 }
+#endif

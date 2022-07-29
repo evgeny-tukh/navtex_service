@@ -44,6 +44,10 @@ void Logger::start () {
         filename = defPath;
     }
 
+    if (handle != INVALID_HANDLE_VALUE) {
+        CloseHandle (handle);
+    }
+
     handle = CreateFileW (filename.c_str (), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_ALWAYS, 0, nullptr);
 
     if (handle != INVALID_HANDLE_VALUE) {
