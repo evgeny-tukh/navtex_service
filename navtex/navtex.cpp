@@ -5,6 +5,9 @@
 #include "../log/log.h"
 #include "navtex.h"
 #include "settings.h"
+#include "../sqlite/sqlite3.h"
+#include "db.h"
+#include "logger_helper.h"
 
 const wchar_t *SETTINGS_FILE = L"NavtexSettings.json";
 
@@ -14,6 +17,25 @@ bool stopNow = false;
 std::thread *worker = nullptr;
 Settings *settings = nullptr;
 MsgCb msgCb = nullptr;
+sqlite3 *db = nullptr;
+
+void _logger (wchar_t *msg) {
+    if (logger) logger->addLogRecord (msg);
+}
+
+void _logger (wchar_t *fmt, wchar_t *arg) {
+    if (logger) logger->addLogRecord (fmt, arg);
+}
+
+void _logger (wchar_t *fmt, int arg) {
+    if (logger) logger->addLogRecord (fmt, arg);
+}
+
+void _logger (wchar_t *fmt, char *arg) {
+    wchar_t argU [1000];
+    MultiByteToWideChar (CP_ACP, 0, arg, -1, argU, 1000);
+    if (logger) logger->addLogRecord (fmt, argU);
+}
 
 void NAVTEX_API SetMsgCb (MsgCb cb) {
     msgCb = cb;
@@ -27,6 +49,9 @@ void doIteration () {
 
     if ((now - lastImitation) > 5) {
         lastImitation = now;
+        auto msg = new MsgInfo ('A', 'A', time (nullptr), "HI THERE");
+        addMessage (db, msg);
+        delete msg;
         if (msgCb) {
             std::wstring msg;
             for (uint32_t i = 0; i < 10; ++ i) {
@@ -46,7 +71,8 @@ void startWorker () {
 
     settings->setCfgFile (settingsPath);
 
-    if (logger) logger->addLogRecord (L"Worker is starting...");
+    _logger (L"Worker is starting...");
+
     worker = new std::thread ([] {
         while (!stopNow) {
             settings->loadIfChanged ();
@@ -57,7 +83,7 @@ void startWorker () {
 }
 
 void stopWorker () {
-    if (logger) logger->addLogRecord (L"Worker is stopping...");
+    _logger (L"Worker is stopping...");
     if (worker && worker->joinable ()) {
         stopNow = true;
         worker->join ();
@@ -85,17 +111,26 @@ void NAVTEX_API StopLog () {
 }
 
 int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb) {
-    if (logger) logger->addLogRecord (L"StartNavtexReceiver; db path: %s", pathToDb);
+    char pathUtf8 [1000];
+    WideCharToMultiByte (CP_UTF8, 0, pathToDb, -1, pathUtf8, sizeof (pathUtf8), nullptr, nullptr);
+    _logger (L"StartNavtexReceiver; db path: %s", pathToDb);
+    if (sqlite3_open (pathUtf8, & db) == SQLITE_OK) {
+        _logger (L"Ok. Checking the version...");
+        checkDb (db);
+        
+    } else {
+        _logger (L"failed: %S", (char *) sqlite3_errmsg (db));
+    }
     return 0;
 }
 
 void NAVTEX_API StopNavtexReceiver () {
-    if (logger) logger->addLogRecord (L"StopNavtexReceiver");
+    _logger (L"StopNavtexReceiver");
 }
 
 void __declspec( dllexport) ReloadSettings () {
     if (!settings) settings = new Settings;
-    if (logger) logger->addLogRecord (L"ReloadSettings");
+    _logger (L"ReloadSettings");
 }
 
 BOOL WINAPI DllMain (HINSTANCE dll, unsigned long reason, void *) {
