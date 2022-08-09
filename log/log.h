@@ -29,6 +29,16 @@ struct Logger {
         _swprintf (buffer, recordFmt, arg);
         addLogRecord (buffer);
     }
+    void addLogRecord (wchar_t *recordFmt, wchar_t *arg1, wchar_t *arg2) {
+        wchar_t buffer [500];
+        _swprintf (buffer, recordFmt, arg1, arg2);
+        addLogRecord (buffer);
+    }
+    void addLogRecord (wchar_t *recordFmt, wchar_t *arg1, wchar_t *arg2, wchar_t *arg3) {
+        wchar_t buffer [500];
+        _swprintf (buffer, recordFmt, arg1, arg2, arg3);
+        addLogRecord (buffer);
+    }
     void addLogRecord (wchar_t *recordFmt, int arg) {
         wchar_t buffer [500];
         _swprintf (buffer, recordFmt, arg);

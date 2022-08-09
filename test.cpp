@@ -15,7 +15,7 @@ int main (int argCount, char *args []) {
     wchar_t path [MAX_PATH];
     GetModuleFileNameW (nullptr, path, MAX_PATH);
     PathRemoveFileSpecW (path);
-    PathAppendW (path, L"navtex.db");
+    PathAppendW (path, L"store.db");
 
     printf ("Navtex test tool\n");
 

@@ -19,24 +19,6 @@ Settings *settings = nullptr;
 MsgCb msgCb = nullptr;
 sqlite3 *db = nullptr;
 
-void _logger (wchar_t *msg) {
-    if (logger) logger->addLogRecord (msg);
-}
-
-void _logger (wchar_t *fmt, wchar_t *arg) {
-    if (logger) logger->addLogRecord (fmt, arg);
-}
-
-void _logger (wchar_t *fmt, int arg) {
-    if (logger) logger->addLogRecord (fmt, arg);
-}
-
-void _logger (wchar_t *fmt, char *arg) {
-    wchar_t argU [1000];
-    MultiByteToWideChar (CP_ACP, 0, arg, -1, argU, 1000);
-    if (logger) logger->addLogRecord (fmt, argU);
-}
-
 void NAVTEX_API SetMsgCb (MsgCb cb) {
     msgCb = cb;
 }
@@ -49,7 +31,13 @@ void doIteration () {
 
     if ((now - lastImitation) > 5) {
         lastImitation = now;
-        auto msg = new MsgInfo ('A', 'A', time (nullptr), "HI THERE");
+        static int count = 1;
+        std::string msgText { "HI THERE" };
+        auto msg = new MsgInfo ('A', 'A', time (nullptr), (msgText + std::to_string (count ++)).c_str ());
+        for (auto i = 0; i < time (nullptr) % 10; ++ i) {
+            msg->positions.emplace_back (59.0 + i * 0.001, 9.0 + i * 0.0001);
+        }
+        
         addMessage (db, msg);
         delete msg;
         if (msgCb) {
