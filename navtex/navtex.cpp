@@ -38,15 +38,17 @@ void doIteration () {
             msg->positions.emplace_back (59.0 + i * 0.001, 9.0 + i * 0.0001);
         }
         
-        addMessage (db, msg);
-        delete msg;
-        if (msgCb) {
-            std::wstring msg;
-            for (uint32_t i = 0; i < 10; ++ i) {
-                if (!msg.empty ()) msg += L',';
-                msg += std::to_wstring (lastMsgID++);
+        if (db) {
+            addMessage (db, msg);
+            delete msg;
+            if (msgCb) {
+                std::wstring msg;
+                for (uint32_t i = 0; i < 10; ++ i) {
+                    if (!msg.empty ()) msg += L',';
+                    msg += std::to_wstring (lastMsgID++);
+                }
+                msgCb ((wchar_t *) msg.c_str ());
             }
-            msgCb ((wchar_t *) msg.c_str ());
         }
     }
 }
