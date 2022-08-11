@@ -16,11 +16,16 @@ bool running = true;
 bool stopNow = false;
 std::thread *worker = nullptr;
 Settings *settings = nullptr;
-MsgCb msgCb = nullptr;
+MsgCb msgAddCb = nullptr;
+MsgCb msgRemoveCb = nullptr;
 sqlite3 *db = nullptr;
 
-void NAVTEX_API SetMsgCb (MsgCb cb) {
-    msgCb = cb;
+void NAVTEX_API SetMsgAddCb (MsgCb cb) {
+    msgAddCb = cb;
+}
+
+void NAVTEX_API SetMsgRemoveCb (MsgCb cb) {
+    msgRemoveCb = cb;
 }
 
 void doIteration () {
@@ -29,7 +34,7 @@ void doIteration () {
 
     time_t now = time (nullptr);
 
-    if ((now - lastImitation) > 5) {
+    if (db && (now - lastImitation) > 30) {
         lastImitation = now;
         static int count = 1;
         std::string msgText { "HI THERE" };
@@ -38,17 +43,15 @@ void doIteration () {
             msg->positions.emplace_back (59.0 + i * 0.001, 9.0 + i * 0.0001);
         }
         
-        if (db) {
-            addMessage (db, msg);
-            delete msg;
-            if (msgCb) {
-                std::wstring msg;
-                for (uint32_t i = 0; i < 10; ++ i) {
-                    if (!msg.empty ()) msg += L',';
-                    msg += std::to_wstring (lastMsgID++);
-                }
-                msgCb ((wchar_t *) msg.c_str ());
+        addMessage (db, msg);
+        delete msg;
+        if (msgAddCb) {
+            std::wstring msg;
+            for (uint32_t i = 0; i < 10; ++ i) {
+                if (!msg.empty ()) msg += L',';
+                msg += std::to_wstring (lastMsgID++);
             }
+            msgAddCb ((wchar_t *) msg.c_str ());
         }
     }
 }

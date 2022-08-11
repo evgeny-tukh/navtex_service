@@ -106,6 +106,11 @@ void upgradeDb (sqlite3 *db, int version) {
         sqlite3_exec (db, "alter table messages add column cancelled real", nullptr, nullptr, nullptr);
         sqlite3_exec (db, "alter table messages add column sent integer(1) not null default 0", nullptr, nullptr, nullptr);
     }
+    if (version < 3) {
+        sqlite3_exec (db, "alter table messages add column navarea integer(1)", nullptr, nullptr, nullptr);
+        sqlite3_exec (db, "alter table messages add column msg_sent real", nullptr, nullptr, nullptr);
+        sqlite3_exec (db, "alter table messages rename column subject to type", nullptr, nullptr, nullptr);
+    }
 }
 
 void checkDb (sqlite3 *db) {
@@ -118,7 +123,7 @@ void checkDb (sqlite3 *db) {
 }
 
 void addMessage (sqlite3 *db, MsgInfo *msg) {
-    static const char *MSG_FMT { "insert into messages(subject,station,read,received,text,source,priority,in_force,cancelled,sent) values(%d,%d,0,%lld,'%s',1,1,1,null,0)" };
+    static const char *MSG_FMT { "insert into messages(type,station,read,received,text,source,priority,in_force,cancelled,sent) values(%d,%d,0,%lld,'%s',1,1,1,null,0)" };
     static const char *POS_FMT { "insert into objects(msg_id,number,lat,lon) values(%d,%d,%f,%f)" };
     char query [500];
     sprintf (query, MSG_FMT, msg->subject, msg->station, msg->receivedAt, msg->msg.c_str ());

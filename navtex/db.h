@@ -2,7 +2,7 @@
 
 #include "../sqlite/sqlite3.h"
 
-const int CUR_VERSION = 2;
+const int CUR_VERSION = 3;
 
 struct MsgInfo {
     char subject;

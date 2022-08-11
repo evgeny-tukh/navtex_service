@@ -13,7 +13,8 @@ void NAVTEX_API StopNavtexReceiver ();
 void NAVTEX_API ReloadSettings ();
 void NAVTEX_API StartLog (wchar_t *file);
 void NAVTEX_API StopLog ();
-void NAVTEX_API SetMsgCb (MsgCb cb);
+void NAVTEX_API SetMsgAddCb (MsgCb cb);
+void NAVTEX_API SetMsgRemoveCb (MsgCb cb);
 
 #ifdef __cplusplus
 }

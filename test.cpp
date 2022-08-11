@@ -20,12 +20,11 @@ int main (int argCount, char *args []) {
     printf ("Navtex test tool\n");
 
     ReloadSettings ();
-    SetMsgCb (onMsgRead);
+    SetMsgAddCb (onMsgRead);
     StartNavtexReceiver (path);
 
     while (true) {
         std::this_thread::sleep_for (std::chrono::seconds (5));
-        printf ("5 sec passed...\n");
     }
 
     exit (0);
