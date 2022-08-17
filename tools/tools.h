@@ -11,11 +11,16 @@ namespace tools {
 
     uint8_t mapStr2Num (NumMap& map, const char *str);
 
+    std::string constructPortName (int port);
     strings& getSerialPortsList (strings& ports);
     std::string getFirstAvailablePort ();
+    int getFirstAvailablePortNo ();
+    int serialPortFromUnc (const char *uncPortName);
 
     std::tuple<bool, std::string> loadFile (const wchar_t *filePath);
 
     uint8_t str2parity (const char *parityStr);
     uint8_t str2stopBits (const char *stopBitsStr);
+    uint8_t char2parity (char parityStr);
+    uint8_t char2stopBits (char stopBitsStr);
 }

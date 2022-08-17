@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <Windows.h>
 #include "defs.h"
-#include "tools.h"
+#include "../tools/tools.h"
 
 struct Settings {
     bool useSerial, forward;

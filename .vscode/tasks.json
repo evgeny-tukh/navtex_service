@@ -1,0 +1,333 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "build the test tool",
+      "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
+      "args": [
+        "/D",
+        "_WINDOWS",
+        "/MTd",
+        "/EHsc",
+        "/Zi",
+        "/I",
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30133\\include",
+        "/Fo:",
+        "build/",
+        "/EHsc",
+        "/std:c++17",
+        "/Fe:",
+        "bin/test.exe",
+        "test.cpp",
+        "log/log.cpp",
+        "User32.lib",
+        "Shell32.lib",
+        "wsock32.lib",
+        "wininet.lib",
+        "advapi32.lib",
+        "Comctl32.lib",
+        "Gdi32.lib",
+        "Ole32.lib",
+        "shlwapi.lib",
+        "build/navtex.lib",
+      ],
+      "problemMatcher": ["$msCompile"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+        "type": "shell",
+        "label": "build the tool/VS2019",
+        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
+        "args": [
+          "/D",
+          "_WINDOWS",
+          "/MTd",
+          "/EHsc",
+          "/Zi",
+          "/I",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30133\\include",
+          "/Fo:",
+          "build/",
+          "/EHsc",
+          "/std:c++17",
+          "/Fe:",
+          "bin/ns.exe",
+          "ns.cpp",
+          "log/log.cpp",
+          "User32.lib",
+          "Shell32.lib",
+          "wsock32.lib",
+          "wininet.lib",
+          "advapi32.lib",
+          "Comctl32.lib",
+          "Gdi32.lib",
+          "Ole32.lib",
+          "shlwapi.lib",
+          "build/navtex.lib",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "type": "shell",
+        "label": "build the tool/VS2017",
+        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe",
+        "args": [
+          "/D",
+          "_WINDOWS",
+          "/MTd",
+          "/EHsc",
+          "/Zi",
+          "/I",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.16.27023\\include",
+          "/Fo:",
+          "build/",
+          "/EHsc",
+          "/std:c++17",
+          "/Fe:",
+          "bin/ns.exe",
+          "ns.cpp",
+          "log/log.cpp",
+          "User32.lib",
+          "Shell32.lib",
+          "wsock32.lib",
+          "wininet.lib",
+          "advapi32.lib",
+          "Comctl32.lib",
+          "Gdi32.lib",
+          "Ole32.lib",
+          "shlwapi.lib",
+          "build/navtex.lib",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+
+
+
+      
+
+
+      {
+        "type": "shell",
+        "label": "build Navtex DLL/VS2019",
+        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
+        "args": [
+          "/D",
+          "_NAVTEX_INTERNAL_",
+          "/MDd",
+          "/EHsc",
+          "/std:c++17",
+          "/Zi",
+          "/I",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30133\\include",
+          "/Fo:",
+          "build/",
+          "/Fe:",
+          "bin/navtex.dll",
+          "navtex/navtex.cpp",
+          "navtex/settings.cpp",
+          "navtex/logger_helper.cpp",
+          "navtex/db.cpp",
+          "json/json_lite.cpp",
+          "log/log.cpp",
+          "sqlite/sqlite3.c",
+          "User32.lib",
+          "wsock32.lib",
+          "wininet.lib",
+          "advapi32.lib",
+          "Comctl32.lib",
+          "Gdi32.lib",
+          "Ole32.lib",
+          "shlwapi.lib",
+          "build/tools.lib",
+          "build/nmea.lib",
+          "/link '/implib:build/navtex.lib /DLL'",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "type": "shell",
+        "label": "build Navtex DLL/VS2017",
+        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe",
+        "args": [
+          "/MDd",
+          "/EHsc",
+          "/std:c++17",
+          "/Zi",
+          "/I",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.16.27023\\include",
+          "/D",
+          "_WINDOWS",
+          "/D",
+          "USRDLL",
+          "/D",
+          "_WINDLL",
+          "/Fo:",
+          "build/",
+          "/Fe:",
+          "bin/navtex.dll",
+          "navtex/navtex.cpp",
+          "navtex/tools.cpp",
+          "navtex/settings.cpp",
+          "json/json_lite.cpp",
+          "log/log.cpp",
+          "User32.lib",
+          "wsock32.lib",
+          "wininet.lib",
+          "advapi32.lib",
+          "Comctl32.lib",
+          "Gdi32.lib",
+          "Ole32.lib",
+          "shlwapi.lib",
+          "/link '/implib:build/navtex.lib /DLL'",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "type": "shell",
+        "label": "build NMEA DLL",
+        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
+        "args": [
+          "/D",
+          "_NMEA_INTERNAL_",
+          "/MDd",
+          "/EHsc",
+          "/std:c++17",
+          "/Zi",
+          "/I",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30133\\include",
+          "/Fo:",
+          "build/",
+          "/Fe:",
+          "bin/nmea.dll",
+          "nmea/nmea.cpp",
+          "nmea/channel.cpp",
+          "nmea/serial_reader.cpp",
+          "nmea/sentence.cpp",
+          "build/nmea.res",
+          "User32.lib",
+          "wsock32.lib",
+          "wininet.lib",
+          "advapi32.lib",
+          "Comctl32.lib",
+          "Gdi32.lib",
+          "Ole32.lib",
+          "shlwapi.lib",
+          "build/tools.lib",
+          "/link '/implib:build/nmea.lib /DLL'",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "type": "shell",
+        "label": "tool resource compile",
+        "command": "C:/Program Files (x86)/Windows Kits/10/bin/10.0.17134.0/x64/rc.exe",
+        "args": [
+          "-fo",
+          "build/ns.res",
+          "ns.rc",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "type": "shell",
+        "label": "navtex resource compile",
+        "command": "C:/Program Files (x86)/Windows Kits/10/bin/10.0.17134.0/x64/rc.exe",
+        "args": [
+          "-fo",
+          "build/ns.res",
+          "navtex/navtex.rc",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "type": "shell",
+        "label": "nmea resource compile",
+        "command": "C:/Program Files (x86)/Windows Kits/10/bin/10.0.17134.0/x64/rc.exe",
+        "args": [
+          "-fo",
+          "build/nmea.res",
+          "nmea/nmea.rc",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+
+
+
+
+
+
+      {
+        "type": "shell",
+        "label": "Compiling Tools library/VS2019",
+        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
+        "args": [
+          "/D",
+          "_ITERATOR_DEBUG_LEVEL=2",
+          "/MDd",
+          "/c",
+          "/EHsc",
+          "/std:c++17",
+          "/Zi",
+          "/I",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30133\\include",
+          "/Fo:",
+          "build/",
+          "tools/tools.cpp",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "type": "shell",
+        "label": "Building Tools library/VS2019",
+        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/lib.exe",
+        "args": [
+          "build/tools.obj",
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+    ]
+}

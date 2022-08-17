@@ -8,6 +8,7 @@
 #include "../sqlite/sqlite3.h"
 #include "db.h"
 #include "logger_helper.h"
+#include "../nmea/nmea.h"
 
 const wchar_t *SETTINGS_FILE = L"NavtexSettings.json";
 
@@ -19,6 +20,7 @@ Settings *settings = nullptr;
 MsgCb msgAddCb = nullptr;
 MsgCb msgRemoveCb = nullptr;
 sqlite3 *db = nullptr;
+nmea::CHANNEL reader = nullptr;
 
 void NAVTEX_API SetMsgAddCb (MsgCb cb) {
     msgAddCb = cb;
@@ -103,6 +105,10 @@ void NAVTEX_API StopLog () {
     }
 }
 
+void onSentenceReceived (char *buffer, size_t size) {
+
+}
+
 int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb) {
     char pathUtf8 [1000];
     WideCharToMultiByte (CP_UTF8, 0, pathToDb, -1, pathUtf8, sizeof (pathUtf8), nullptr, nullptr);
@@ -114,11 +120,21 @@ int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb) {
     } else {
         _logger (L"failed: %S", (char *) sqlite3_errmsg (db));
     }
+    if (!reader) reader = nmea::createChannel (nmea::ConnectionType::SERIAL, onSentenceReceived);
+    nmea::configureChannel (reader, tools::serialPortFromUnc (settings->serialPort.c_str ()), settings->baud, settings->byteSize, settings->parity, settings->stopBits);
+    nmea::connectChannel (reader);
+    nmea::activateChannel (reader, true);
     return 0;
 }
 
 void NAVTEX_API StopNavtexReceiver () {
     _logger (L"StopNavtexReceiver");
+    if (reader) {
+        nmea::activateChannel (reader, false);
+        if (nmea::isChannelConnected (reader)) nmea::disconnectChannel (reader);
+        nmea::deleteChannel (reader);
+        reader = nullptr;
+    }
 }
 
 void __declspec( dllexport) ReloadSettings () {

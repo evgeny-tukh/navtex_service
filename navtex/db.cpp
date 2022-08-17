@@ -111,6 +111,10 @@ void upgradeDb (sqlite3 *db, int version) {
         sqlite3_exec (db, "alter table messages add column msg_sent real", nullptr, nullptr, nullptr);
         sqlite3_exec (db, "alter table messages rename column subject to type", nullptr, nullptr, nullptr);
     }
+    if (version < 4) {
+        sqlite3_exec (db, "alter table messages add column processed integer(1)", nullptr, nullptr, nullptr);
+        sqlite3_exec (db, "create index if not exists msg_processed on messages (processed,id)", nullptr, nullptr, nullptr);
+    }
 }
 
 void checkDb (sqlite3 *db) {

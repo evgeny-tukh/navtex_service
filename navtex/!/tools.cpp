@@ -65,6 +65,12 @@ namespace tools {
         return pos == map.end () ? map.begin ()->second : pos->second;
     }
 
+    uint8_t mapChar2Num (NumMap& map, const char chr) {
+        char str [2] { chr, 0 };
+        auto pos = map.find (str);
+        return pos == map.end () ? map.begin ()->second : pos->second;
+    }
+
     uint8_t str2parity (const char *parityStr) {
         static NumMap parities {
             { "None", NOPARITY },
@@ -76,6 +82,17 @@ namespace tools {
         return mapStr2Num (parities, parityStr);
     }
 
+    uint8_t char2parity (const char parityStr) {
+        static NumMap parities {
+            { "N", NOPARITY },
+            { "O", ODDPARITY },
+            { "E", EVENPARITY },
+            { "M", MARKPARITY },
+            { "S", SPACEPARITY },
+        };
+        return mapChar2Num (parities, parityStr);
+    }
+
     uint8_t str2stopBits (const char *stopBitsStr) {
         static NumMap stopBits {
             { "1", ONESTOPBIT },
@@ -83,5 +100,14 @@ namespace tools {
             { "1.5", ONE5STOPBITS },
         };
         return mapStr2Num (stopBits, stopBitsStr);
+    }
+
+    uint8_t char2stopBits (const char stopBitsStr) {
+        static NumMap stopBits {
+            { "1", ONESTOPBIT },
+            { "2", TWOSTOPBITS },
+            { "0", ONE5STOPBITS },
+        };
+        return mapChar2Num (stopBits, stopBitsStr);
     }
 }

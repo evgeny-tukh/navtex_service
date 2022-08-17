@@ -6,7 +6,6 @@
 
 #include "../json/json_lite.h"
 #include "../log/log.h"
-#include "tools.h"
 #include "settings.h"
 
 extern Logger *logger;
