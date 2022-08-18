@@ -23,4 +23,7 @@ namespace tools {
     uint8_t str2stopBits (const char *stopBitsStr);
     uint8_t char2parity (char parityStr);
     uint8_t char2stopBits (char stopBitsStr);
+
+    uint8_t char2hex (char chr);
+    uint8_t twoChars2hex (char *chars);
 }

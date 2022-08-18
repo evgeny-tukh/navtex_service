@@ -2,8 +2,12 @@
 #include <Windows.h>
 #include <Shlwapi.h>
 
+#include <optional>
+#include <functional>
+
 #include "nmea.h"
 #include "channel.h"
+#include "sentence.h"
 #include "serial_reader.h"
 #include "../tools/tools.h"
 
@@ -12,6 +16,12 @@ BOOL WINAPI DllMain (HINSTANCE dll, unsigned long reason, void *) {
 }
 
 namespace nmea {
+    void NMEA_API extractAndParseAll (char *source, SentenceCb cb) {
+        Sentence sentence;
+        sentence.extractAndParseAll (source, [&sentence, cb] (void *) {
+            cb (& sentence);
+        });
+    }
     CHANNEL NMEA_API createChannel (ConnectionType type, Cb cb) {
         return new Channel (type, cb);
     }
@@ -78,5 +88,43 @@ namespace nmea {
             return reader && reader->isConnected ();
         }
         return false;
+    }
+    size_t NMEA_API getSentenceFieldsNumber (SENTENCE snt) {
+        return ((Sentence *) snt)->numOfFields ();
+    }
+    std::string NMEA_API getSentenceFieldAt (SENTENCE snt, size_t index) {
+        return ((Sentence *) snt)->getAt (index);
+    }
+    int NMEA_API getSentenceFieldAsIntAt (SENTENCE snt, size_t index) {
+        return ((Sentence *) snt)->getAsIntAt (index);
+    }
+    double NMEA_API getSentenceFieldAsDoubleAt (SENTENCE snt, size_t index) {
+        return ((Sentence *) snt)->getAsDoubleAt (index);
+    }
+    char NMEA_API getSentenceFieldAsCharAt (SENTENCE snt, size_t index) {
+        return ((Sentence *) snt)->getAsCharAt (index);
+    }
+    bool NMEA_API isSentenceFieldOmitted (SENTENCE snt, size_t index) {
+        return ((Sentence *) snt)->omitted (index);
+    }
+    bool NMEA_API isSentenceSixBitEncoded (SENTENCE snt) {
+        return ((Sentence *) snt)->isSixBitEncoded ();
+    }
+    bool NMEA_API isSentenceProprietary (SENTENCE snt) {
+        return ((Sentence *) snt)->isProprietary ();
+    }
+    std::string NMEA_API getSentenceType (SENTENCE snt) {
+        auto sentence = (Sentence *) snt;
+        auto firstField = sentence->getAt (0);
+
+        if (sentence->isProprietary ()) return firstField.substr (4, 3);
+        return firstField.substr (3, 3);
+    }
+    std::string NMEA_API getSentenceTalkerID (SENTENCE snt) {
+        auto sentence = (Sentence *) snt;
+        auto firstField = sentence->getAt (0);
+
+        if (sentence->isProprietary ()) return firstField.substr (2, 2);
+        return firstField.substr (1, 2);
     }
 }

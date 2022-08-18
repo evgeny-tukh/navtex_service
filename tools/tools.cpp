@@ -64,7 +64,7 @@ namespace tools {
 
         return atoi (com + 3);
     }
-    
+
     int getFirstAvailablePortNo () {
         strings ports;
         int port;
@@ -143,5 +143,16 @@ namespace tools {
             { "0", ONE5STOPBITS },
         };
         return charStr2Num (stopBits, stopBitsStr);
+    }
+
+    uint8_t char2hex (char chr) {
+        if (chr >= '0' && chr <= '9') return chr - '0';
+        if (chr >= 'A' && chr <= 'F') return chr - 'A' + 10;
+        if (chr >= 'a' && chr <= 'f') return chr - 'a' + 10;
+        return 0;
+    }
+
+    uint8_t twoChars2hex (char *chars) {
+        return chars ? char2hex (chars [0]) * 16 + char2hex (chars [1]) : 0;
     }
 }

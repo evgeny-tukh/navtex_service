@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "defs.h"
 
 namespace nmea {
@@ -7,6 +9,7 @@ namespace nmea {
     typedef void *CHANNEL;
     typedef void *SENTENCE;
     typedef void (*Cb) (char *, size_t);
+    typedef void (*SentenceCb) (SENTENCE);
 
     CHANNEL NMEA_API createChannel (ConnectionType type, Cb cb);
     void NMEA_API deleteChannel (CHANNEL);
@@ -16,4 +19,15 @@ namespace nmea {
     void NMEA_API disconnectChannel (CHANNEL);
     bool NMEA_API isChannelConnected (CHANNEL);
     void NMEA_API activateChannel (CHANNEL, bool);
+    void NMEA_API extractAndParseAll (char *, SentenceCb);
+    
+    size_t NMEA_API getSentenceFieldsNumber (SENTENCE);
+    std::string NMEA_API getSentenceFieldAt (SENTENCE, size_t);
+    int NMEA_API getSentenceFieldAsIntAt (SENTENCE, size_t);
+    double NMEA_API getSentenceFieldAsDoubleAt (SENTENCE, size_t);
+    char NMEA_API getSentenceFieldAsCharAt (SENTENCE, size_t);
+    bool NMEA_API isSentenceFieldOmitted (SENTENCE, size_t);
+    std::string NMEA_API getSentenceType (SENTENCE);
+    std::string NMEA_API getSentenceTalkerID (SENTENCE);
+    bool NMEA_API isSentenceSixBitEncoded (SENTENCE);
 }

@@ -105,8 +105,15 @@ void NAVTEX_API StopLog () {
     }
 }
 
-void onSentenceReceived (char *buffer, size_t size) {
+void onSentenceParsed (nmea::SENTENCE sentence) {
+    auto type = nmea::getSentenceType (sentence);
+    if (type.compare ("NRX") == 0) {
+        
+    }
+}
 
+void onSentenceReceived (char *buffer, size_t size) {
+    nmea::extractAndParseAll (buffer, onSentenceParsed);
 }
 
 int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb) {
