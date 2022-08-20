@@ -77,49 +77,6 @@
       },
       {
         "type": "shell",
-        "label": "build the tool/VS2017",
-        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe",
-        "args": [
-          "/D",
-          "_WINDOWS",
-          "/MTd",
-          "/EHsc",
-          "/Zi",
-          "/I",
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.16.27023\\include",
-          "/Fo:",
-          "build/",
-          "/EHsc",
-          "/std:c++17",
-          "/Fe:",
-          "bin/ns.exe",
-          "ns.cpp",
-          "log/log.cpp",
-          "User32.lib",
-          "Shell32.lib",
-          "wsock32.lib",
-          "wininet.lib",
-          "advapi32.lib",
-          "Comctl32.lib",
-          "Gdi32.lib",
-          "Ole32.lib",
-          "shlwapi.lib",
-          "build/navtex.lib",
-        ],
-        "problemMatcher": ["$msCompile"],
-        "group": {
-          "kind": "build",
-          "isDefault": true
-        }
-      },
-
-
-
-      
-
-
-      {
-        "type": "shell",
         "label": "build Navtex DLL/VS2019",
         "command": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
         "args": [
@@ -139,6 +96,8 @@
           "navtex/settings.cpp",
           "navtex/logger_helper.cpp",
           "navtex/db.cpp",
+          "navtex/parsing.cpp",
+          "navtex/message.cpp",
           "json/json_lite.cpp",
           "log/log.cpp",
           "sqlite/sqlite3.c",
@@ -152,48 +111,6 @@
           "shlwapi.lib",
           "build/tools.lib",
           "build/nmea.lib",
-          "/link '/implib:build/navtex.lib /DLL'",
-        ],
-        "problemMatcher": ["$msCompile"],
-        "group": {
-          "kind": "build",
-          "isDefault": true
-        }
-      },
-      {
-        "type": "shell",
-        "label": "build Navtex DLL/VS2017",
-        "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe",
-        "args": [
-          "/MDd",
-          "/EHsc",
-          "/std:c++17",
-          "/Zi",
-          "/I",
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.16.27023\\include",
-          "/D",
-          "_WINDOWS",
-          "/D",
-          "USRDLL",
-          "/D",
-          "_WINDLL",
-          "/Fo:",
-          "build/",
-          "/Fe:",
-          "bin/navtex.dll",
-          "navtex/navtex.cpp",
-          "navtex/tools.cpp",
-          "navtex/settings.cpp",
-          "json/json_lite.cpp",
-          "log/log.cpp",
-          "User32.lib",
-          "wsock32.lib",
-          "wininet.lib",
-          "advapi32.lib",
-          "Comctl32.lib",
-          "Gdi32.lib",
-          "Ole32.lib",
-          "shlwapi.lib",
           "/link '/implib:build/navtex.lib /DLL'",
         ],
         "problemMatcher": ["$msCompile"],

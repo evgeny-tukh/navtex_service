@@ -9,6 +9,7 @@
 #include "db.h"
 #include "logger_helper.h"
 #include "../nmea/nmea.h"
+#include "parsing.h"
 
 const wchar_t *SETTINGS_FILE = L"NavtexSettings.json";
 
@@ -105,11 +106,9 @@ void NAVTEX_API StopLog () {
     }
 }
 
+
 void onSentenceParsed (nmea::SENTENCE sentence) {
-    auto type = nmea::getSentenceType (sentence);
-    if (type.compare ("NRX") == 0) {
-        
-    }
+    onNewSentence (sentence);
 }
 
 void onSentenceReceived (char *buffer, size_t size) {

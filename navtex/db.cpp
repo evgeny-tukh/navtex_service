@@ -6,6 +6,7 @@
 #include <optional>
 #include "db.h"
 #include "logger_helper.h"
+#include "parsing.h"
 
 struct GetParamCtx {
     const char *column;
