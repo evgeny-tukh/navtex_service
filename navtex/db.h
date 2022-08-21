@@ -5,4 +5,4 @@
 const int CUR_VERSION = 4;
 
 void checkDb (sqlite3 *db);
-void addMessage (sqlite3 *db, struct MsgInfo *msg);
+uint64_t addMessage (sqlite3 *db, struct MsgInfo *msg);

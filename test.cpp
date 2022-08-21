@@ -5,10 +5,10 @@
 #include <chrono>
 #include <thread>
 
-extern "C" void onMsgRead (wchar_t *ids);
+extern "C" void onMsgRead (wchar_t *ids, wchar_t *text);
 
-void onMsgRead (wchar_t *ids) {
-    wprintf (L"Messages received: %s\n", ids);
+void onMsgRead (wchar_t *ids, wchar_t *text) {
+    wprintf (L"Messages received: %s\n\n===========================================\n%s\n===========================================", ids, text);
 }
 
 int main (int argCount, char *args []) {
@@ -20,7 +20,7 @@ int main (int argCount, char *args []) {
     printf ("Navtex test tool\n");
 
     ReloadSettings ();
-    SetMsgAddCb (onMsgRead);
+    SetMsgAddCb2 (onMsgRead);
     StartNavtexReceiver (path);
 
     while (true) {

@@ -127,16 +127,31 @@ void checkDb (sqlite3 *db) {
     }
 }
 
-void addMessage (sqlite3 *db, MsgInfo *msg) {
+uint64_t addMessage (sqlite3 *db, MsgInfo *msg) {
     static const char *MSG_FMT { "insert into messages(type,station,read,received,text,source,priority,in_force,cancelled,sent) values(%d,%d,0,%lld,'%s',1,1,1,null,0)" };
     static const char *POS_FMT { "insert into objects(msg_id,number,lat,lon) values(%d,%d,%f,%f)" };
-    char query [500];
-    sprintf (query, MSG_FMT, msg->subject, msg->station, msg->receivedAt, msg->msg.c_str ());
-    sqlite3_exec (db, query, nullptr, nullptr, nullptr);
-    auto msgID = sqlite3_last_insert_rowid (db);
-    for (size_t i = 0; i < msg->positions.size (); ++ i) {
-        auto& pos = msg->positions [i];
-        sprintf (query, POS_FMT, msgID, (int) i, pos.first, pos.second);
-        sqlite3_exec (db, query, nullptr, nullptr, nullptr);
+    char query [5000];
+    uint64_t result = 0;
+    for (size_t i = 0; i < msg->msg.length (); ++ i) {
+        if (msg->msg [i] == '\'') {
+            msg->msg.insert (msg->msg.begin () + i, '\'');
+            ++ i;
+        } else if (msg->msg [i] == '"') {
+            msg->msg.insert (msg->msg.begin () + i, '"');
+            ++ i;
+        }
     }
+    sprintf (query, MSG_FMT, msg->subject, msg->station, msg->receivedAt, msg->msg.c_str ());
+    if (sqlite3_exec (db, query, nullptr, nullptr, nullptr) == SQLITE_OK) {
+        result = sqlite3_last_insert_rowid (db);
+        auto msgID = sqlite3_last_insert_rowid (db);
+        for (size_t i = 0; i < msg->positions.size (); ++ i) {
+            auto& pos = msg->positions [i];
+            sprintf (query, POS_FMT, msgID, (int) i, pos.first, pos.second);
+            sqlite3_exec (db, query, nullptr, nullptr, nullptr);
+        }
+    } else {
+        auto err = sqlite3_errmsg (db);
+    }
+    return result;
 }

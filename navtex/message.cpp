@@ -10,6 +10,11 @@ Message *findMessage (uint8_t seqNo) {
     return & pos->second;
 }
 
+void dropMessage (uint32_t seqNo) {
+    auto pos = messages.find (seqNo);
+    if (pos != messages.end ()) messages.erase (pos);
+}
+
 Message& checkMessage (uint32_t seqNo, uint32_t numOfExpectedSentences, uint32_t sentenceNum, const char *text) {
     auto msg = findMessage (seqNo);
     if (msg) {
@@ -29,9 +34,9 @@ Message::Message (uint32_t _seqNo, uint32_t _numOfExpectedSentences, uint32_t _s
 }
 
 void Message::onReceived (uint32_t _sentenceNum, const char *_text) {
-    isReceived [_sentenceNum] = true;
+    isReceived [_sentenceNum-1] = true;
     lastReceived = _sentenceNum;
-    parts [_sentenceNum] = _text;
+    parts [_sentenceNum-1] = _text;
 }
 
 bool Message::completed () {

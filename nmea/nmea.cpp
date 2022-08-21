@@ -117,8 +117,8 @@ namespace nmea {
         auto sentence = (Sentence *) snt;
         auto firstField = sentence->getAt (0);
 
-        if (sentence->isProprietary ()) return firstField.substr (4, 3);
-        return firstField.substr (3, 3);
+        if (sentence->isProprietary ()) return firstField.length () > 6 ? firstField.substr (4, 3) : "";
+        return firstField.length () > 5 ? firstField.substr (3, 3) : "";
     }
     std::string NMEA_API getSentenceTalkerID (SENTENCE snt) {
         auto sentence = (Sentence *) snt;

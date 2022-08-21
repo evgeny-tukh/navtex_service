@@ -19,12 +19,27 @@ bool stopNow = false;
 std::thread *worker = nullptr;
 Settings *settings = nullptr;
 MsgCb msgAddCb = nullptr;
+MsgCb2 msgAddCb2 = nullptr;
 MsgCb msgRemoveCb = nullptr;
 sqlite3 *db = nullptr;
 nmea::CHANNEL reader = nullptr;
+std::vector<bool> subjectFilter;
+
+bool isCharCodeValid (char subject) {
+    return subject >= 'A' && subject <= 'Z';
+}
+
+bool isSubjectEnabled (char subject) {
+    if (subjectFilter.empty ()) subjectFilter.insert (subjectFilter.begin (), 26, true);
+    return isCharCodeValid (subject) ? subjectFilter [subject - 'A'] : false;
+}
 
 void NAVTEX_API SetMsgAddCb (MsgCb cb) {
     msgAddCb = cb;
+}
+
+void NAVTEX_API SetMsgAddCb2 (MsgCb2 cb) {
+    msgAddCb2 = cb;
 }
 
 void NAVTEX_API SetMsgRemoveCb (MsgCb cb) {
@@ -32,6 +47,7 @@ void NAVTEX_API SetMsgRemoveCb (MsgCb cb) {
 }
 
 void doIteration () {
+    #if 0
     static time_t lastImitation = 0;
     static uint32_t lastMsgID = 1;
 
@@ -41,7 +57,7 @@ void doIteration () {
         lastImitation = now;
         static int count = 1;
         std::string msgText { "HI THERE" };
-        auto msg = new MsgInfo ('A', 'A', time (nullptr), (msgText + std::to_string (count ++)).c_str ());
+        auto msg = new MsgInfo ('A', 'A', count, time (nullptr), (msgText + std::to_string (count ++)).c_str ());
         for (auto i = 0; i < time (nullptr) % 10; ++ i) {
             msg->positions.emplace_back (59.0 + i * 0.001, 9.0 + i * 0.0001);
         }
@@ -57,6 +73,7 @@ void doIteration () {
             msgAddCb ((wchar_t *) msg.c_str ());
         }
     }
+    #endif
 }
 
 void startWorker () {

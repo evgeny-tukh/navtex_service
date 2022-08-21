@@ -19,3 +19,4 @@ struct Message {
 };
 
 Message& checkMessage (uint32_t seqNo, uint32_t numOfExpectedSentences, uint32_t sentenceNum, const char *text);
+void dropMessage (uint32_t seqNo);
