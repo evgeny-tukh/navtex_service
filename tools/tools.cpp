@@ -155,4 +155,8 @@ namespace tools {
     uint8_t twoChars2hex (char *chars) {
         return chars ? char2hex (chars [0]) * 16 + char2hex (chars [1]) : 0;
     }
+
+    uint8_t twoChars2int (char *chars) {
+        return chars ? char2hex (chars [0]) * 10 + char2hex (chars [1]) : 0;
+    }
 }

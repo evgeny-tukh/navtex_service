@@ -26,4 +26,5 @@ namespace tools {
 
     uint8_t char2hex (char chr);
     uint8_t twoChars2hex (char *chars);
+    uint8_t twoChars2int (char *chars);
 }

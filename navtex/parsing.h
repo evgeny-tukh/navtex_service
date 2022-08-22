@@ -8,6 +8,7 @@ bool translateControlCharacters (const char *source, std::string& dest);
 bool parseNxNrx (nmea::SENTENCE sentence);
 bool parseCrNrx (nmea::SENTENCE sentence);
 bool onNewSentence (nmea::SENTENCE sentence);
+void extractPositions (struct MsgInfo *msgInfo, char *source);
 
 struct MsgInfo {
     char subject;
@@ -24,6 +25,7 @@ struct MsgInfo {
         time_t _receivedAt,
         const char *_msg
     ): subject (_subject), station (_station), receivedAt (_receivedAt), msg (_msg), seqNo (_seqNo) {
+        extractPositions (this, (char *) _msg);
     }
 
     void addPosition (double lat, double lon) {

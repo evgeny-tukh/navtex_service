@@ -4,6 +4,46 @@ bool SerialReader::connect () {
     SerialReaderCfg *config = (SerialReaderCfg *) cfg;
     port = CreateFile (tools::constructPortName (config->port).c_str (), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
     connected = port != INVALID_HANDLE_VALUE;
+
+    if (connected) {
+        COMMTIMEOUTS timeouts;
+        DCB dcb;
+
+        SetupComm (port, 4096, 4096);
+        PurgeComm (port, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
+
+        memset (& dcb, 0, sizeof (dcb));
+
+        GetCommState (port, & dcb);
+
+        dcb.BaudRate = config->baud;
+        dcb.ByteSize = config->byteSize;
+        dcb.StopBits = config->stopBits;
+        dcb.Parity = config->parity;
+        dcb.fBinary =
+        dcb.fParity = 1;
+        dcb.fOutxDsrFlow = 0; 
+        dcb.fDtrControl = DTR_CONTROL_ENABLE;
+        dcb.fOutxCtsFlow = 0; 
+        dcb.fRtsControl  = RTS_CONTROL_ENABLE;
+        dcb.fInX  =
+        dcb.fOutX = 1;
+        dcb.XonChar = ASCII_CHARS::XON;
+        dcb.XoffChar = ASCII_CHARS::XOFF;
+        dcb.XonLim = 100;
+        dcb.XoffLim = 100;
+
+        SetCommState (port, & dcb);
+        GetCommTimeouts (port, & timeouts);
+
+        timeouts.ReadIntervalTimeout = 1000;
+        timeouts.ReadTotalTimeoutMultiplier = 1;
+        timeouts.ReadTotalTimeoutConstant = 3000;
+
+        SetCommTimeouts (port, & timeouts);
+        EscapeCommFunction (port, SETDTR);
+    }
+
     return connected;
 }
 

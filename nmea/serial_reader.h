@@ -5,6 +5,15 @@
 #include <cstdint>
 #include "../tools/tools.h"
 
+enum ASCII_CHARS {
+    BEL = 0x07,
+    BS = 0x08 ,
+    LF= 0x0A,
+    CR= 0x0D ,
+    XON = 0x11,
+    XOFF = 0x13,
+};
+
 struct SerialReaderCfg: ReaderCfg {
     SerialReaderCfg (): baud (4800), byteSize (8), stopBits (ONESTOPBIT), parity (NOPARITY), port (tools::getFirstAvailablePortNo ()) {}
     uint32_t baud;
