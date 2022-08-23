@@ -15,18 +15,19 @@ void dropMessage (uint32_t seqNo) {
     if (pos != messages.end ()) messages.erase (pos);
 }
 
-Message& checkMessage (uint32_t seqNo, uint32_t numOfExpectedSentences, uint32_t sentenceNum, const char *text) {
+Message& checkMessage (uint32_t seqNo, uint32_t numOfExpectedSentences, uint32_t sentenceNum, const char *text, time_t whenSent) {
     auto msg = findMessage (seqNo);
     if (msg) {
         msg->onReceived (sentenceNum, text);
+        if (!msg->whenSent && whenSent) msg->whenSent = whenSent;
     } else {
-        msg = & messages.emplace (std::pair<uint8_t, Message> (seqNo, Message (seqNo, numOfExpectedSentences, sentenceNum, text))).first->second;
+        msg = & messages.emplace (std::pair<uint8_t, Message> (seqNo, Message (seqNo, numOfExpectedSentences, sentenceNum, text, whenSent))).first->second;
     }
     return *msg;
 }
 
-Message::Message (uint32_t _seqNo, uint32_t _numOfExpectedSentences, uint32_t _sentenceNum, const char *_text):
-    seqNo (_seqNo), numOfExpectedSentences (_numOfExpectedSentences), numOfReceivedSentences (1), lastReceived (_sentenceNum) {
+Message::Message (uint32_t _seqNo, uint32_t _numOfExpectedSentences, uint32_t _sentenceNum, const char *_text, time_t _whenSent):
+    seqNo (_seqNo), numOfExpectedSentences (_numOfExpectedSentences), numOfReceivedSentences (1), lastReceived (_sentenceNum), whenSent (_whenSent) {
     isReceived.insert (isReceived.begin (), numOfExpectedSentences, false);
     parts.clear ();
     parts.resize (numOfExpectedSentences);

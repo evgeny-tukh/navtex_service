@@ -14,7 +14,7 @@ struct MsgInfo {
     char subject;
     char station;
     uint32_t seqNo;
-    time_t receivedAt;
+    time_t receivedAt, sentAt;
     std::string msg;
     std::vector<std::pair<double, double>> positions;
 
@@ -23,8 +23,9 @@ struct MsgInfo {
         char _station,
         uint32_t _seqNo,
         time_t _receivedAt,
+        time_t _sentAt,
         const char *_msg
-    ): subject (_subject), station (_station), receivedAt (_receivedAt), msg (_msg), seqNo (_seqNo) {
+    ): subject (_subject), station (_station), receivedAt (_receivedAt), msg (_msg), seqNo (_seqNo), sentAt (_sentAt) {
         extractPositions (this, (char *) _msg);
     }
 
@@ -34,7 +35,7 @@ struct MsgInfo {
         newPos.second = lon;
     }
 
-    static MsgInfo *parseNativeMsg (const char *source, bool useHeaderAndTail);
+    static MsgInfo *parseNativeMsg (const char *source, time_t sentAt, bool useHeaderAndTail);
 };
 
 bool isCharCodeValid (char subject);

@@ -116,6 +116,9 @@ void upgradeDb (sqlite3 *db, int version) {
         sqlite3_exec (db, "alter table messages add column processed integer(1)", nullptr, nullptr, nullptr);
         sqlite3_exec (db, "create index if not exists msg_processed on messages (processed,id)", nullptr, nullptr, nullptr);
     }
+    if (version < 5) {
+        sqlite3_exec (db, "alter table messages add column processed integer(1)", nullptr, nullptr, nullptr);
+    }
 }
 
 void checkDb (sqlite3 *db) {
@@ -128,7 +131,7 @@ void checkDb (sqlite3 *db) {
 }
 
 uint64_t addMessage (sqlite3 *db, MsgInfo *msg) {
-    static const char *MSG_FMT { "insert into messages(type,station,read,received,text,source,priority,in_force,cancelled,sent) values(%d,%d,0,%lld,'%s',1,1,1,null,0)" };
+    static const char *MSG_FMT { "insert into messages(type,station,read,received,text,source,priority,in_force,cancelled,sent) values(%d,%d,0,%lld,'%s',1,1,1,null,%lld)" };
     static const char *POS_FMT { "insert into objects(msg_id,number,lat,lon) values(%d,%d,%f,%f)" };
     char query [5000];
     uint64_t result = 0;
@@ -141,7 +144,7 @@ uint64_t addMessage (sqlite3 *db, MsgInfo *msg) {
             ++ i;
         }
     }
-    sprintf (query, MSG_FMT, msg->subject, msg->station, msg->receivedAt, msg->msg.c_str ());
+    sprintf (query, MSG_FMT, msg->subject, msg->station, msg->receivedAt, msg->msg.c_str (), msg->sentAt);
     if (sqlite3_exec (db, query, nullptr, nullptr, nullptr) == SQLITE_OK) {
         result = sqlite3_last_insert_rowid (db);
         auto msgID = sqlite3_last_insert_rowid (db);

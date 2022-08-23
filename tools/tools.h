@@ -27,4 +27,8 @@ namespace tools {
     uint8_t char2hex (char chr);
     uint8_t twoChars2hex (char *chars);
     uint8_t twoChars2int (char *chars);
+
+    time_t hhmmss2time (char *source);
+    time_t ddmmyyyy2time (char *source);
+    time_t ddmmyyyy2time (unsigned day, unsigned month, unsigned year);
 }

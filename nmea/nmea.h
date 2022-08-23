@@ -27,6 +27,7 @@ namespace nmea {
     double NMEA_API getSentenceFieldAsDoubleAt (SENTENCE, size_t);
     char NMEA_API getSentenceFieldAsCharAt (SENTENCE, size_t);
     bool NMEA_API isSentenceFieldOmitted (SENTENCE, size_t);
+    bool NMEA_API isAnySentenceFieldOmitted (SENTENCE snt, size_t index1, size_t index2);
     std::string NMEA_API getSentenceType (SENTENCE);
     std::string NMEA_API getSentenceTalkerID (SENTENCE);
     bool NMEA_API isSentenceSixBitEncoded (SENTENCE);

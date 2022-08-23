@@ -47,8 +47,8 @@ bool translateControlCharacters (const char *source, std::string& dest) {
     return true;
 }
 
-void processNativeMsg (const char *source) {
-    auto msgInfo = MsgInfo::parseNativeMsg (source, false);
+void processNativeMsg (const char *source, time_t whenSent = 0) {
+    auto msgInfo = MsgInfo::parseNativeMsg (source, whenSent, false);
     if (msgInfo) {
         auto msgID = addMessage (db, msgInfo);
         std::wstring idString = std::to_wstring (msgID);
@@ -80,7 +80,7 @@ bool parseCrNrx (nmea::SENTENCE sentence) {
             text.insert (text.begin (), prefix.begin (), prefix.end ());
         }
 
-        auto& msg = checkMessage (seqNo, expectedLines, lineNo, text.c_str ());
+        auto& msg = checkMessage (seqNo, expectedLines, lineNo, text.c_str (), time (nullptr));
 
         if (msg.completed ()) {
             processNativeMsg (msg.composeText ().c_str ());
@@ -94,15 +94,24 @@ bool parseNxNrx (nmea::SENTENCE sentence) {
     if (nmea::getSentenceFieldsNumber (sentence) > 10) {
         auto expectedLines = nmea::getSentenceFieldAsIntAt (sentence, 3);
         auto lineNo = nmea::getSentenceFieldAsIntAt (sentence, 2);
-        auto seqNo = nmea::isSentenceFieldOmitted (sentence, 1) ? 0 : nmea::getSentenceFieldAsIntAt (sentence, 1);
+        std::string lineID = nmea::isSentenceFieldOmitted (sentence, 1) ? "" : nmea::getSentenceFieldAt (sentence, 1);
+        auto seqNo = lineID.length () > 3 ? atoi (nmea::getSentenceFieldAt (sentence, 1).substr (2).c_str ()) : 0;
         std::string text;
+        time_t whenSent = 0;
 
+        if (lineNo == 1 && !nmea::isAnySentenceFieldOmitted (sentence, 5, 8)) {
+            auto day = nmea::getSentenceFieldAsIntAt (sentence, 5);
+            auto month = nmea::getSentenceFieldAsIntAt (sentence, 6);
+            auto year = nmea::getSentenceFieldAsIntAt (sentence, 7);
+            auto utc = tools::hhmmss2time (nmea::getSentenceFieldAt (sentence, 8).data ());
+            whenSent = tools::ddmmyyyy2time (day, month, year) + utc;
+        }
         translateControlCharacters (nmea::getSentenceFieldAt (sentence, 10).c_str (), text);
 
-        auto& msg = checkMessage (seqNo, expectedLines, lineNo, text.c_str ());
+        auto& msg = checkMessage (seqNo, expectedLines, lineNo, text.c_str (), whenSent);
 
         if (msg.completed ()) {
-            processNativeMsg (msg.composeText ().c_str ());
+            processNativeMsg (msg.composeText ().c_str (), msg.whenSent);
             dropMessage (seqNo);
         }
     }
@@ -625,7 +634,7 @@ void extractPositions (MsgInfo *msgInfo, char *source) {
     }
 }
 
-MsgInfo *MsgInfo::parseNativeMsg (const char *source, bool useHeaderAndTail) {
+MsgInfo *MsgInfo::parseNativeMsg (const char *source, time_t sentAt, bool useHeaderAndTail) {
     std::string msgText;
     if (useHeaderAndTail) {
         const char *header = strstr (source, MSG_HEAD);
@@ -635,11 +644,13 @@ MsgInfo *MsgInfo::parseNativeMsg (const char *source, bool useHeaderAndTail) {
     } else {
         msgText = source;
     }
-    while (!msgText.empty () && msgText.front () <= ' ' || msgText.front () == '*') msgText.erase (msgText.front ());
+    while (!msgText.empty () && (msgText.front () <= ' ' || msgText.front () == '*')) {
+        msgText.erase (msgText.begin ());
+    }
     if (!isCharCodeValid (msgText.front ()) || !isCharCodeValid (msgText [1]) || !isdigit (msgText [2]) || !isdigit (msgText [3])) {
-        return new MsgInfo (MSG_SUSPICIOUS, *source, atoi (source + 2), time (nullptr), source + 4);
+        return new MsgInfo (MSG_SUSPICIOUS, *source, atoi (source + 2), time (nullptr), sentAt, source + 4);
     } else if (isSubjectEnabled (msgText [1])) {
-        return new MsgInfo (msgText [1], msgText.front (), atoi (msgText.c_str () + 2), time (nullptr), msgText.c_str () + 4);
+        return new MsgInfo (msgText [1], msgText.front (), atoi (msgText.c_str () + 2), time (nullptr), sentAt, msgText.c_str () + 4);
     }
     return nullptr;
 }

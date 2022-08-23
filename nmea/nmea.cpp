@@ -107,6 +107,12 @@ namespace nmea {
     bool NMEA_API isSentenceFieldOmitted (SENTENCE snt, size_t index) {
         return ((Sentence *) snt)->omitted (index);
     }
+    bool NMEA_API isAnySentenceFieldOmitted (SENTENCE snt, size_t index1, size_t index2) {
+        for (auto i = index1; i <= index2; ++ i) {
+            if (((Sentence *) snt)->omitted (i)) return true;
+        }
+        return false;
+    }
     bool NMEA_API isSentenceSixBitEncoded (SENTENCE snt) {
         return ((Sentence *) snt)->isSixBitEncoded ();
     }

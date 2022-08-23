@@ -3,6 +3,7 @@
 #include <tuple>
 #include <map>
 #include <vector>
+#include <time.h>
 #include "tools.h"
 
 namespace tools {
@@ -157,6 +158,39 @@ namespace tools {
     }
 
     uint8_t twoChars2int (char *chars) {
+        if (!chars || !isdigit (chars [0]) || !isdigit (chars [1])) return 0;
         return chars ? char2hex (chars [0]) * 10 + char2hex (chars [1]) : 0;
+    }
+
+    time_t hhmmss2time (char *source) {
+        for (size_t i = 0; i < 6; ++ i) {
+            if (!source [i] || !isdigit (source [i])) return -1;
+        }
+        auto hr = twoChars2int (source);
+        auto min = twoChars2int (source + 2);
+        auto sec = twoChars2int (source + 4);
+        if (hr > 23 || min > 59 || sec > 59) return -1;
+        return (time_t) hr * 3600 + (time_t) min * 60 + (time_t) sec;
+    }
+
+    time_t ddmmyyyy2time (unsigned day, unsigned month, unsigned year) {
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1980) return -1;
+        static int monSize [] { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, };
+        uint64_t result = (year - 1970) * 365 + (year - 1970) / 4 - 1;
+        for (auto i = 1; i < month; ++ i) {
+            result += monSize [i-1];
+        }
+        if (month > 2 && (year % 4) == 0) result ++;
+        result += (day - 1);
+        return (time_t) (result * 3600 * 24);
+    }
+    time_t ddmmyyyy2time (char *source) {
+        for (size_t i = 0; i < 6; ++ i) {
+            if (!source [i] || !isdigit (source [i])) return -1;
+        }
+        auto day = twoChars2int (source);
+        auto month = twoChars2int (source + 2);
+        auto year = twoChars2int (source + 4);
+        return ddmmyyyy2time (day, month, year);
     }
 }
