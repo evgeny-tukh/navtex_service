@@ -1,14 +1,22 @@
 #pragma once
 
 #include <string>
+#include <tuple>
 
 #include "../nmea/nmea.h"
+
+typedef std::tuple<bool, double, double> OptionalPos;
+typedef std::tuple<char *, double, double> PosExtractResult;
+typedef std::pair<double, size_t> CoordExtractResult;
+typedef std::tuple<double, size_t, bool> CoordExtractStatus;
+typedef std::tuple<bool, char, char, uint8_t> LineID;
 
 bool translateControlCharacters (const char *source, std::string& dest);
 bool parseNxNrx (nmea::SENTENCE sentence);
 bool parseCrNrx (nmea::SENTENCE sentence);
 bool onNewSentence (nmea::SENTENCE sentence);
 void extractPositions (struct MsgInfo *msgInfo, char *source);
+LineID parseLineID (const char *source);
 
 struct MsgInfo {
     char subject;
@@ -35,7 +43,7 @@ struct MsgInfo {
         newPos.second = lon;
     }
 
-    static MsgInfo *parseNativeMsg (const char *source, time_t sentAt, bool useHeaderAndTail);
+    static MsgInfo *parseNativeMsg (const char *source, time_t sentAt, bool useHeaderAndTail, const char *msgID);
 };
 
 bool isCharCodeValid (char subject);

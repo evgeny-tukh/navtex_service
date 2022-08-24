@@ -173,12 +173,19 @@ namespace tools {
         return (time_t) hr * 3600 + (time_t) min * 60 + (time_t) sec;
     }
 
+    uint8_t getMonthLen (int mon, int year) {
+        static int monSize [] { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, };
+        uint8_t result = (mon > 0 && mon < 13) ? monSize [mon] : 0;
+        if (mon == 2 && year != 0 && (year % 4) == 0) ++ result;
+        return result;
+    }
+
     time_t ddmmyyyy2time (unsigned day, unsigned month, unsigned year) {
         if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1980) return -1;
-        static int monSize [] { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, };
-        uint64_t result = (year - 1970) * 365 + (year - 1970) / 4 - 1;
+        uint64_t result = (year - 1970) * 365;
+        if (year > 1972) result += (year - 1973) / 4 + 1;
         for (auto i = 1; i < month; ++ i) {
-            result += monSize [i-1];
+            result += getMonthLen (i);
         }
         if (month > 2 && (year % 4) == 0) result ++;
         result += (day - 1);
@@ -192,5 +199,19 @@ namespace tools {
         auto month = twoChars2int (source + 2);
         auto year = twoChars2int (source + 4);
         return ddmmyyyy2time (day, month, year);
+    }
+
+    uint8_t getMonthNo (char *source) {
+        static char *months [] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", };
+        for (size_t i = 0; i < 12; ++ i) {
+            bool found = true;
+            for (size_t j = 0; j < 3; ++ j) {
+                if (toupper (source [j]) != months [i][j]) {
+                    found = false; break;
+                }
+            }
+            if (found) return i + 1;
+        }
+        return 0;
     }
 }

@@ -1,6 +1,7 @@
 #include <map>
 #include "message.h"
 #include "../nmea/nmea.h"
+#include "parsing.h"
 
 std::map<uint8_t, Message> messages;
 
@@ -15,19 +16,24 @@ void dropMessage (uint32_t seqNo) {
     if (pos != messages.end ()) messages.erase (pos);
 }
 
-Message& checkMessage (uint32_t seqNo, uint32_t numOfExpectedSentences, uint32_t sentenceNum, const char *text, time_t whenSent) {
+Message *checkMessage (uint32_t seqNo, uint32_t numOfExpectedSentences, uint32_t sentenceNum, const char *text, time_t whenSent, const char *lineID) {
     auto msg = findMessage (seqNo);
     if (msg) {
         msg->onReceived (sentenceNum, text);
-        if (!msg->whenSent && whenSent) msg->whenSent = whenSent;
-    } else {
-        msg = & messages.emplace (std::pair<uint8_t, Message> (seqNo, Message (seqNo, numOfExpectedSentences, sentenceNum, text, whenSent))).first->second;
+        if (!msg->whenSent && whenSent > 0) msg->whenSent = whenSent;
+    } else if (sentenceNum == 1) {
+        msg = & messages.emplace (std::pair<uint8_t, Message> (seqNo, Message (seqNo, numOfExpectedSentences, sentenceNum, text, whenSent, lineID))).first->second;
     }
-    return *msg;
+    return msg;
 }
 
-Message::Message (uint32_t _seqNo, uint32_t _numOfExpectedSentences, uint32_t _sentenceNum, const char *_text, time_t _whenSent):
-    seqNo (_seqNo), numOfExpectedSentences (_numOfExpectedSentences), numOfReceivedSentences (1), lastReceived (_sentenceNum), whenSent (_whenSent) {
+Message::Message (uint32_t _seqNo, uint32_t _numOfExpectedSentences, uint32_t _sentenceNum, const char *_text, time_t _whenSent, const char *_lineID):
+    seqNo (_seqNo),
+    numOfExpectedSentences (_numOfExpectedSentences),
+    numOfReceivedSentences (1),
+    lastReceived (_sentenceNum),
+    whenSent (_whenSent),
+    lineID (_lineID) {
     isReceived.insert (isReceived.begin (), numOfExpectedSentences, false);
     parts.clear ();
     parts.resize (numOfExpectedSentences);

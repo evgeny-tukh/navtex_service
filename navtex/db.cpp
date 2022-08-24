@@ -61,18 +61,28 @@ void upgradeDb (sqlite3 *db, int version) {
             db,
             "create table if not exists messages ("
             " id integer primary key,"
-            " subject integer(1) not null,"
+            " type integer(1) not null,"
             " station integer(1) not null,"
             " read integer(1) not null,"
-            " received real not null,"
-            " text text not null"
+            " received integer(8) not null,"
+            " sent integer(8) not null,"
+            " text text not null,"
+            " source integer(1) not null default 1,"
+            " priority integer(1) not null default 1,"
+            " in_force integer(1) not null default 1,"
+            " cancelled real,"
+            " navarea integer(1),"
+            " processed integer(1) not null default 0"
             ")",
             nullptr,
             nullptr,
             nullptr
         );
         sqlite3_exec (db, "create unique index if not exists received on messages (received, id)", nullptr, nullptr, nullptr);
+        sqlite3_exec (db, "create unique index if not exists sent on messages (sent, id)", nullptr, nullptr, nullptr);
         sqlite3_exec (db, "create unique index if not exists by_subject on messages (subject, received, id)", nullptr, nullptr, nullptr);
+        sqlite3_exec (db, "create unique index if not exists by_subject_2 on messages (subject, sent, id)", nullptr, nullptr, nullptr);
+        sqlite3_exec (db, "create index if not exists msg_processed on messages (processed,id)", nullptr, nullptr, nullptr);
         sqlite3_exec (
             db,
             "create table if not exists objects ("
@@ -89,6 +99,19 @@ void upgradeDb (sqlite3 *db, int version) {
         sqlite3_exec (db, "create unique index if not exists objects_main on objects (msg_id, number)", nullptr, nullptr, nullptr);
         sqlite3_exec (
             db,
+            "create table if not exists objects ("
+            " id integer primary key,"
+            " msg_id integer not null,"
+            " number integer(2) not null,"
+            " lat real not null,"
+            " lon real not null"
+            ")",
+            nullptr,
+            nullptr,
+            nullptr
+        );
+        sqlite3_exec (
+            db,
             "create table if not exists settings ("
             " id integer primary key,"
             " prop_name text not null,"
@@ -101,23 +124,12 @@ void upgradeDb (sqlite3 *db, int version) {
         sqlite3_exec (db, "create unique index if not exists settings_main on settings (prop_name)", nullptr, nullptr, nullptr);
     }
     if (version < 2) {
-        sqlite3_exec (db, "alter table messages add column source integer(1) not null default 1", nullptr, nullptr, nullptr);
-        sqlite3_exec (db, "alter table messages add column priority integer(1) not null default 1", nullptr, nullptr, nullptr);
-        sqlite3_exec (db, "alter table messages add column in_force integer(1) not null default 1", nullptr, nullptr, nullptr);
-        sqlite3_exec (db, "alter table messages add column cancelled real", nullptr, nullptr, nullptr);
-        sqlite3_exec (db, "alter table messages add column sent integer(1) not null default 0", nullptr, nullptr, nullptr);
     }
     if (version < 3) {
-        sqlite3_exec (db, "alter table messages add column navarea integer(1)", nullptr, nullptr, nullptr);
-        sqlite3_exec (db, "alter table messages add column msg_sent real", nullptr, nullptr, nullptr);
-        sqlite3_exec (db, "alter table messages rename column subject to type", nullptr, nullptr, nullptr);
     }
     if (version < 4) {
-        sqlite3_exec (db, "alter table messages add column processed integer(1)", nullptr, nullptr, nullptr);
-        sqlite3_exec (db, "create index if not exists msg_processed on messages (processed,id)", nullptr, nullptr, nullptr);
     }
     if (version < 5) {
-        sqlite3_exec (db, "alter table messages add column processed integer(1)", nullptr, nullptr, nullptr);
     }
 }
 
@@ -131,7 +143,7 @@ void checkDb (sqlite3 *db) {
 }
 
 uint64_t addMessage (sqlite3 *db, MsgInfo *msg) {
-    static const char *MSG_FMT { "insert into messages(type,station,read,received,text,source,priority,in_force,cancelled,sent) values(%d,%d,0,%lld,'%s',1,1,1,null,%lld)" };
+    static const char *MSG_FMT { "insert into messages(type,station,read,received,text,source,priority,in_force,cancelled,sent) values(%d,%d,0,%lld,'%s',1,1,1,null,%s)" };
     static const char *POS_FMT { "insert into objects(msg_id,number,lat,lon) values(%d,%d,%f,%f)" };
     char query [5000];
     uint64_t result = 0;
@@ -144,7 +156,8 @@ uint64_t addMessage (sqlite3 *db, MsgInfo *msg) {
             ++ i;
         }
     }
-    sprintf (query, MSG_FMT, msg->subject, msg->station, msg->receivedAt, msg->msg.c_str (), msg->sentAt);
+    std::string sentAt = msg->sentAt < 0 ? "null" : std::to_string (msg->sentAt);
+    sprintf (query, MSG_FMT, msg->subject, msg->station, msg->receivedAt, msg->msg.c_str (), sentAt.c_str ());
     if (sqlite3_exec (db, query, nullptr, nullptr, nullptr) == SQLITE_OK) {
         result = sqlite3_last_insert_rowid (db);
         auto msgID = sqlite3_last_insert_rowid (db);

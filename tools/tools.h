@@ -31,4 +31,7 @@ namespace tools {
     time_t hhmmss2time (char *source);
     time_t ddmmyyyy2time (char *source);
     time_t ddmmyyyy2time (unsigned day, unsigned month, unsigned year);
+
+    uint8_t getMonthNo (char *source);
+    uint8_t getMonthLen (int mon, int year = 0);
 }
