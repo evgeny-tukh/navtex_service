@@ -16,6 +16,7 @@ class Channel {
         void activate (bool flag) { active = flag; }
         void stop () { running = false; }
         nmea::ConnectionType getType () { return type; }
+        void setType (nmea::ConnectionType _type) { type = _type; }
         Reader *getReader (nmea::ConnectionType);
 
     private:

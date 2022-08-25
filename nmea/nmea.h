@@ -14,6 +14,7 @@ namespace nmea {
     typedef void (*SentenceCb) (SENTENCE);
 
     ConnectionType NMEA_API getConnectionType (CHANNEL);
+    bool NMEA_API setConnectionType (CHANNEL, ConnectionType);
     CHANNEL NMEA_API createChannel (ConnectionType type, Cb cb);
     void NMEA_API deleteChannel (CHANNEL);
     void NMEA_API configureChannel (CHANNEL channel, int port, int baud, const char *params);

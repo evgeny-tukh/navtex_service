@@ -54,8 +54,11 @@ bool UdpReader::getAvailableData (Buffer& result) {
     if (bytesAvailable > 0) {
         result.resize (bytesAvailable);
         SOCKADDR_IN origin;
-        int size = sizeof (receiver);
-        return recvfrom (receiver, (char *) result.data (), bytesAvailable, 0, (SOCKADDR *) & origin, & size) > 0;
+        int error = 0;
+        int size = sizeof (origin);
+        int received = recvfrom (receiver, (char *) result.data (), bytesAvailable, 0, (SOCKADDR *) & origin, & size);
+        if (received < 0) error = WSAGetLastError ();
+        return received > 0;
     } else {
         result.clear ();
     }

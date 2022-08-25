@@ -29,6 +29,12 @@ namespace nmea {
     CHANNEL NMEA_API createChannel (ConnectionType type, Cb cb) {
         return new Channel (type, cb);
     }
+    bool NMEA_API setConnectionType (CHANNEL channel, ConnectionType type) {
+        if (channel) {
+            ((Channel *) channel)->setType (type); return true;
+        }
+        return false;
+    }
     ConnectionType NMEA_API getConnectionType (CHANNEL channel) {
         return channel ? ((Channel *) channel)->getType () : nmea::ConnectionType::UNKNOWN;
     }

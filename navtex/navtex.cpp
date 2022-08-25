@@ -149,6 +149,7 @@ int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb) {
     if (!reader) reader = nmea::createChannel (nmea::ConnectionType::SERIAL, onSentenceReceived);
     nmea::configureChannel (reader, tools::serialPortFromUnc (settings->serialPort.c_str ()), settings->baud, settings->byteSize, settings->parity, settings->stopBits);
     nmea::configureChannel (reader, settings->inPort, settings->outPort, settings->bindAddr);
+    nmea::setConnectionType (reader, settings->useSerial ? nmea::ConnectionType::SERIAL : nmea::ConnectionType::UDP);
     nmea::connectChannel (reader);
     nmea::activateChannel (reader, true);
     return 0;
