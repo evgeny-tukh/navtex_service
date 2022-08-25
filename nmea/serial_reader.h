@@ -39,4 +39,5 @@ class SerialReader: public Reader {
         virtual size_t dataAvailable ();
         virtual bool getAvailableData (Buffer& result);
         virtual nmea::ConnectionType getType () { return nmea::ConnectionType::SERIAL; }
+        virtual bool write (char *);
 };

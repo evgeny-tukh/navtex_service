@@ -1,4 +1,5 @@
 #include "serial_reader.h"
+#include "udp_reader.h"
 
 bool SerialReader::connect () {
     SerialReaderCfg *config = (SerialReaderCfg *) cfg;
@@ -79,5 +80,11 @@ bool SerialReader::getAvailableData (Buffer& result) {
     } else {
         result.clear ();
     }
-    return true;
+    return ok;
+}
+
+bool SerialReader::write (char *data) {
+    if (port == INVALID_HANDLE_VALUE) return false;
+    unsigned long bytesWritten;
+    return WriteFile (port, data, strlen (data), & bytesWritten, nullptr) && bytesWritten > 0;
 }

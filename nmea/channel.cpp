@@ -4,17 +4,19 @@
 #include "nmea.h"
 #include "channel.h"
 
-Channel::Channel (nmea::ConnectionType _type, nmea::Cb _cb): type (_type), reader (nullptr), cb (_cb), running (true), active (false), worker (nullptr) {
-    switch (_type) {
-        case nmea::ConnectionType::SERIAL: reader = new SerialReader (); break;
-    }
+Channel::Channel (nmea::ConnectionType _type, nmea::Cb _cb): type (_type), cb (_cb), running (true), active (false), worker (nullptr) {
+    readers.emplace (std::pair<nmea::ConnectionType, Reader *> (nmea::ConnectionType::SERIAL, new SerialReader ()));
+    readers.emplace (std::pair<nmea::ConnectionType, Reader *> (nmea::ConnectionType::UDP, new UdpReader ()));
+
     worker = new std::thread ([this] () { workerProc (); });
 }
 
 Channel::~Channel () {
-    if (reader) {
-        reader->disconnect ();
-        delete reader;
+    for (auto reader: readers) {
+        if (reader.second) {
+            reader.second->disconnect ();
+            delete reader.second;
+        }
     }
     running = false;
     if (worker) {
@@ -23,10 +25,16 @@ Channel::~Channel () {
     }
 }
 
+Reader *Channel::getReader (nmea::ConnectionType type) {
+    auto pos = readers.find (type);
+    return pos == readers.end () ? nullptr : pos->second;
+}
+
 void Channel::workerProc () {
     while (running) {
         if (active) {
             Reader::Buffer buffer;
+            auto reader = getReader (type);
             if (reader && reader->isConnected ()) {
                 reader->getAvailableData (buffer);
                 if (!buffer.empty () && cb) {

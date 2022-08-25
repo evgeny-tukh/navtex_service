@@ -139,6 +139,7 @@
           "nmea/nmea.cpp",
           "nmea/channel.cpp",
           "nmea/serial_reader.cpp",
+          "nmea/udp_reader.cpp",
           "nmea/sentence.cpp",
           "build/nmea.res",
           "User32.lib",

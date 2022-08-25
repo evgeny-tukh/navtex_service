@@ -130,6 +130,9 @@ void onSentenceParsed (nmea::SENTENCE sentence) {
 
 void onSentenceReceived (char *buffer, size_t size) {
     nmea::extractAndParseAll (buffer, onSentenceParsed);
+    if (reader && nmea::getConnectionType (reader) == nmea::ConnectionType::SERIAL) {
+        nmea::writeToMedia (reader, nmea::ConnectionType::UDP, buffer);
+    }
 }
 
 int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb) {
@@ -145,6 +148,7 @@ int NAVTEX_API StartNavtexReceiver (wchar_t *pathToDb) {
     }
     if (!reader) reader = nmea::createChannel (nmea::ConnectionType::SERIAL, onSentenceReceived);
     nmea::configureChannel (reader, tools::serialPortFromUnc (settings->serialPort.c_str ()), settings->baud, settings->byteSize, settings->parity, settings->stopBits);
+    nmea::configureChannel (reader, settings->inPort, settings->outPort, settings->bindAddr);
     nmea::connectChannel (reader);
     nmea::activateChannel (reader, true);
     return 0;

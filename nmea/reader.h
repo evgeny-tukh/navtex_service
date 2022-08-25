@@ -38,6 +38,7 @@ class Reader {
             result.clear ();
             return true;
         }
+        virtual bool write (char *) { return false; }
         virtual void configure (ReaderCfg *_cfg) {
             if (!cfg) cfg = (ReaderCfg *) malloc (_cfg->size);
             memcpy (cfg, _cfg, _cfg->size);

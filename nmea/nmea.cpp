@@ -12,6 +12,10 @@
 #include "../tools/tools.h"
 
 BOOL WINAPI DllMain (HINSTANCE dll, unsigned long reason, void *) {
+    if (reason == DLL_PROCESS_ATTACH) {
+        WSADATA data;
+        WSAStartup (0x202, & data);
+    }
     return TRUE;
 }
 
@@ -25,15 +29,45 @@ namespace nmea {
     CHANNEL NMEA_API createChannel (ConnectionType type, Cb cb) {
         return new Channel (type, cb);
     }
+    ConnectionType NMEA_API getConnectionType (CHANNEL channel) {
+        return channel ? ((Channel *) channel)->getType () : nmea::ConnectionType::UNKNOWN;
+    }
     void NMEA_API deleteChannel (CHANNEL channel) {
         if (channel) {
             delete (Channel *) channel;
         }
     }
+    void NMEA_API configureChannel (CHANNEL chn, uint32_t inPort, uint32_t outPort, const char *bindAddr) {
+        Channel *channel = (Channel *) chn;
+        auto reader = channel->getReader (nmea::ConnectionType::UDP);
+        if (reader) {
+            bool connected = reader->isConnected ();
+            if (connected) reader->disconnect ();
+            UdpReaderCfg *cfg = (UdpReaderCfg *) reader->getConfig ();
+            cfg->inPort = inPort;
+            cfg->outPort = outPort;
+            cfg->bindTo = bindAddr;
+            if (connected) reader->connect ();
+        }
+    }
+    void NMEA_API configureChannel (CHANNEL chn, uint32_t inPort, uint32_t outPort, IN_ADDR bindAddr) {
+        Channel *channel = (Channel *) chn;
+        auto reader = channel->getReader (nmea::ConnectionType::UDP);
+        if (reader) {
+            bool connected = reader->isConnected ();
+            if (connected) reader->disconnect ();
+            UdpReaderCfg *cfg = (UdpReaderCfg *) reader->getConfig ();
+            cfg->inPort = inPort;
+            cfg->outPort = outPort;
+            cfg->bindTo = bindAddr.S_un.S_addr == 0 ? "" : inet_ntoa (bindAddr);
+            if (connected) reader->connect ();
+        }
+    }
+
     void NMEA_API configureChannel (CHANNEL chn, int port, int baud, const char *params) {
         Channel *channel = (Channel *) chn;
-        auto reader = channel->getReader ();
-        if (reader && reader->getType () == ConnectionType::SERIAL) {
+        auto reader = channel->getReader (nmea::ConnectionType::SERIAL);
+        if (reader) {
             bool connected = reader->isConnected ();
             if (connected) reader->disconnect ();
             SerialReaderCfg *cfg = (SerialReaderCfg *) reader->getConfig ();
@@ -47,8 +81,8 @@ namespace nmea {
     }
     void NMEA_API configureChannel (CHANNEL chn, int port, int baud, int byteSize, int parity, int stopBits) {
         Channel *channel = (Channel *) chn;
-        auto reader = channel->getReader ();
-        if (reader && reader->getType () == ConnectionType::SERIAL) {
+        auto reader = channel->getReader (nmea::ConnectionType::SERIAL);
+        if (reader) {
             bool connected = reader->isConnected ();
             if (connected) reader->disconnect ();
             SerialReaderCfg *cfg = (SerialReaderCfg *) reader->getConfig ();
@@ -69,7 +103,7 @@ namespace nmea {
     bool NMEA_API connectChannel (CHANNEL chn) {
         if (chn) {
             Channel *channel = (Channel *) chn;
-            auto reader = channel->getReader ();
+            auto reader = channel->getReader (getConnectionType (chn));
             return reader && reader->connect ();
         }
         return false;
@@ -77,14 +111,14 @@ namespace nmea {
     void NMEA_API disconnectChannel (CHANNEL chn) {
         if (chn) {
             Channel *channel = (Channel *) chn;
-            auto reader = channel->getReader ();
+            auto reader = channel->getReader (getConnectionType (chn));
             if (reader) reader->disconnect ();
         }
     }
     bool NMEA_API isChannelConnected (CHANNEL chn) {
         if (chn) {
             Channel *channel = (Channel *) chn;
-            auto reader = channel->getReader ();
+            auto reader = channel->getReader (getConnectionType (chn));
             return reader && reader->isConnected ();
         }
         return false;
@@ -132,5 +166,11 @@ namespace nmea {
 
         if (sentence->isProprietary ()) return firstField.substr (2, 2);
         return firstField.substr (1, 2);
+    }
+    bool NMEA_API writeToMedia (CHANNEL chn, ConnectionType type, char *data) {
+        Channel *channel = (Channel *) chn;
+        Reader *reader = channel->getReader (type);
+        if (reader) return reader->write (data);
+        return false;
     }
 }

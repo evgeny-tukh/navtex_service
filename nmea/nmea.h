@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <winsock.h>
+
 
 #include "defs.h"
 
@@ -11,10 +13,13 @@ namespace nmea {
     typedef void (*Cb) (char *, size_t);
     typedef void (*SentenceCb) (SENTENCE);
 
+    ConnectionType NMEA_API getConnectionType (CHANNEL);
     CHANNEL NMEA_API createChannel (ConnectionType type, Cb cb);
     void NMEA_API deleteChannel (CHANNEL);
     void NMEA_API configureChannel (CHANNEL channel, int port, int baud, const char *params);
     void NMEA_API configureChannel (CHANNEL chn, int port, int baud, int byteSize, int parity, int stopBits);
+    void NMEA_API configureChannel (CHANNEL chn, uint32_t inPort, uint32_t outPort, const char *bindAddr);
+    void NMEA_API configureChannel (CHANNEL chn, uint32_t inPort, uint32_t outPort, IN_ADDR bindAddr);
     bool NMEA_API connectChannel (CHANNEL);
     void NMEA_API disconnectChannel (CHANNEL);
     bool NMEA_API isChannelConnected (CHANNEL);
@@ -31,4 +36,6 @@ namespace nmea {
     std::string NMEA_API getSentenceType (SENTENCE);
     std::string NMEA_API getSentenceTalkerID (SENTENCE);
     bool NMEA_API isSentenceSixBitEncoded (SENTENCE);
+
+    bool NMEA_API writeToMedia (CHANNEL, ConnectionType, char *);
 }
