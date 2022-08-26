@@ -49,6 +49,7 @@ void Settings::load (const wchar_t *cfgFile) {
             json::numberNode *inPortNode = (json::numberNode *) (*cfg) ["udp_in"];
             json::numberNode *outPortNode = (json::numberNode *) (*cfg) ["udp_out"];
             json::stringNode *bindNode = (json::stringNode *) (*cfg) ["udp_bind"];
+            json::booleanNode *protocolNode = (json::booleanNode *) (*cfg) ["native_protocol"];
 
             useSerial = useSerialNode == json::nothing ? true : useSerialNode->getValue ();
             serialPort = serialPortNode == json::nothing ? 0 : serialPortNode->getValue ();
@@ -59,6 +60,7 @@ void Settings::load (const wchar_t *cfgFile) {
             forward = forwardNode == json::nothing ? false : forwardNode->getValue ();
             inPort = inPortNode == json::nothing ? 0 : (uint32_t) inPortNode->getValue ();
             outPort = outPortNode == json::nothing ? 0 : (uint32_t) outPortNode->getValue ();
+            useNativeProtocol = protocolNode == json::nothing ? false : protocolNode->getValue ();
             
             bindAddr.S_un.S_addr = bindNode == json::nothing ? INADDR_ANY : inet_addr (bindNode->getValue ());
 

@@ -50,7 +50,7 @@ bool translateControlCharacters (const char *source, std::string& dest) {
     return true;
 }
 
-void processNativeMsg (const char *source, const char *msgID, time_t whenSent = 0) {
+void processNativeMsg (const char *source, const char *msgID, time_t whenSent) {
     auto msgInfo = MsgInfo::parseNativeMsg (source, whenSent, false, msgID);
     if (msgInfo) {
         auto msgID = addMessage (db, msgInfo);

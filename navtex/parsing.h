@@ -48,3 +48,6 @@ struct MsgInfo {
 
 bool isCharCodeValid (char subject);
 bool isSubjectEnabled (char subject);
+
+time_t extractUtc (char *source);
+void processNativeMsg (const char *source, const char *msgID, time_t whenSent = 0);

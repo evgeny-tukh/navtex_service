@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <Shlwapi.h>
 #include <thread>
+#include <string>
 #include <chrono>
 #include "../log/log.h"
 #include "navtex.h"
@@ -24,6 +25,7 @@ MsgCb msgRemoveCb = nullptr;
 sqlite3 *db = nullptr;
 nmea::CHANNEL reader = nullptr;
 std::vector<bool> subjectFilter;
+std::string nativeMsg;
 
 bool isCharCodeValid (char subject) {
     return subject >= 'A' && subject <= 'Z';
@@ -128,8 +130,58 @@ void onSentenceParsed (nmea::SENTENCE sentence) {
     onNewSentence (sentence);
 }
 
+void processNativeProtocolLine (char *buffer, size_t size) {
+    auto parseNativeMsg = [] () {
+        std::string translatedMsg;
+        translateControlCharacters (nativeMsg.c_str (), translatedMsg);
+        while (
+            !translatedMsg.empty () && (
+                translatedMsg.front () == ' ' || 
+                translatedMsg.front () == '\t' ||
+                translatedMsg.front () == '\r' ||
+                translatedMsg.front () == '\n'
+            )
+        ) {
+            translatedMsg.erase (translatedMsg.begin ());
+        }
+        auto whenSent = extractUtc (translatedMsg.data ());
+        processNativeMsg (translatedMsg.c_str (), translatedMsg.substr (0, 4).c_str (), whenSent);
+        nativeMsg.clear ();
+    };
+    std::string input (buffer, size);
+    if (nativeMsg.empty ()) {
+        auto headerPos = input.find (MSG_HEAD);
+        if (headerPos != std::string::npos) {
+            auto tailPos = input.find (MSG_TAIL, headerPos + MSG_HEAD_SIZE);
+            if (tailPos == std::string::npos) {
+                nativeMsg = input.substr (headerPos + MSG_HEAD_SIZE);
+            } else {
+                nativeMsg = input.substr (headerPos + MSG_HEAD_SIZE, tailPos - headerPos);
+                parseNativeMsg ();
+                input.erase (input.begin (), input.begin () + (tailPos + MSG_TAIL_SIZE));
+                if (!input.empty ()) processNativeProtocolLine (input.data (), input.length ());
+            }
+        }
+    } else {
+        auto tailPos = input.find (MSG_TAIL);
+        if (tailPos == std::string::npos) {
+            nativeMsg += input;
+        } else {
+            nativeMsg += input.substr (0, tailPos);
+            parseNativeMsg ();
+            input.erase (input.begin (), input.begin () + (tailPos + MSG_TAIL_SIZE));
+            if (!input.empty ()) processNativeProtocolLine (input.data (), input.length ());
+        }
+    }
+}
+
 void onSentenceReceived (char *buffer, size_t size) {
-    nmea::extractAndParseAll (buffer, onSentenceParsed);
+    if (settings->useNativeProtocol) {
+        processNativeProtocolLine (buffer, size);
+    } else {
+        std::string rawData (buffer, size);
+        nmea::extractAndParseAll (rawData.data (), onSentenceParsed);
+    }
     if (reader && nmea::getConnectionType (reader) == nmea::ConnectionType::SERIAL) {
         nmea::writeToMedia (reader, nmea::ConnectionType::UDP, buffer);
     }
