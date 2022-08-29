@@ -7,6 +7,7 @@
 #include <string>
 
 struct Logger {
+    static const unsigned long MAX_SIZE = 100 * 1024;
     HANDLE handle;
     std::wstring filename;
 
@@ -14,10 +15,7 @@ struct Logger {
     virtual ~Logger () {
         if (handle != INVALID_HANDLE_VALUE) CloseHandle (handle);
     }
-    void addToLog (wchar_t *string) {
-        unsigned long bytesWritten;
-        WriteFile (handle, string, wcslen (string) * sizeof (wchar_t), & bytesWritten, nullptr);
-    }
+    void addToLog (wchar_t *string);
     void addLogRecord (wchar_t *record) {
         addLogPrefix ();
         addToLog (record);

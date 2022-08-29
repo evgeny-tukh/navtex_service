@@ -36,6 +36,31 @@ void Logger::stop () {
     }
 }
 
+void Logger::addToLog (wchar_t *string) {
+    if (handle != INVALID_HANDLE_VALUE) {
+        auto size = GetFileSize (handle, nullptr);
+        if (size > MAX_SIZE) {
+            CloseHandle (handle);
+
+            std::wstring backupFilename = filename;
+            PathRenameExtensionW (backupFilename.data (), L".bak");
+            if (PathFileExistsW (backupFilename.c_str ())) {
+                DeleteFileW (backupFilename.c_str ());
+            }
+            MoveFileW (filename.c_str (), backupFilename.c_str ());
+
+            handle = CreateFileW (filename.c_str (), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_ALWAYS, 0, nullptr);
+
+            if (handle != INVALID_HANDLE_VALUE) {
+                addLogRecord (L"log session continued");
+            }
+        }
+
+        unsigned long bytesWritten;
+        WriteFile (handle, string, wcslen (string) * sizeof (wchar_t), & bytesWritten, nullptr);
+    }
+}
+
 void Logger::start () {
     wchar_t defPath [MAX_PATH];
     if (filename.empty ()) {
