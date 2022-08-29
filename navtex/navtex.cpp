@@ -49,6 +49,15 @@ void NAVTEX_API SetMsgRemoveCb (MsgCb cb) {
 }
 
 void doIteration () {
+    static time_t lastExpiredRecsCheck = 0;
+    static const time_t EXPIRED_RECS_CHECK_PERIOD = 30;
+    time_t now = time (nullptr);
+    
+    if ((now - lastExpiredRecsCheck) >= EXPIRED_RECS_CHECK_PERIOD) {
+        lastExpiredRecsCheck = now;
+        auto result = removeExpiredMessages (db, settings->expiryHours);
+        _logger (L"Expired records check: deleted %d messages, %d objects", std::get<0> (result), std::get<1> (result));
+    }
     #if 0
     static time_t lastImitation = 0;
     static uint32_t lastMsgID = 1;

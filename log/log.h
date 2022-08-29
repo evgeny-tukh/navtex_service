@@ -44,6 +44,11 @@ struct Logger {
         _swprintf (buffer, recordFmt, arg);
         addLogRecord (buffer);
     }
+    void addLogRecord (wchar_t *recordFmt, int arg1, int arg2) {
+        wchar_t buffer [500];
+        _swprintf (buffer, recordFmt, arg1, arg2);
+        addLogRecord (buffer);
+    }
     void stop ();
     void start ();
 

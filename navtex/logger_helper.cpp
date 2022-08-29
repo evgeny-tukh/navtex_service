@@ -14,6 +14,10 @@ void _logger (wchar_t *fmt, int arg) {
     if (logger) logger->addLogRecord (fmt, arg);
 }
 
+void _logger (wchar_t *fmt, int arg1, int arg2) {
+    if (logger) logger->addLogRecord (fmt, arg1, arg2);
+}
+
 void _logger (wchar_t *fmt, char *arg1, char *arg2) {
     wchar_t arg1U [1000];
     wchar_t arg2U [1000];

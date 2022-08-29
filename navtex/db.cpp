@@ -171,3 +171,19 @@ uint64_t addMessage (sqlite3 *db, MsgInfo *msg) {
     }
     return result;
 }
+
+std::tuple<int, int> removeExpiredMessages (sqlite3 *db, int numOfHours) {
+    if (db) {
+        char query [100], condition [100];
+        int numOfDeletedObjects, numOfDeletedMessages;
+        sprintf (condition, "where (strftime('%%s', 'now')-received)>%d)",  numOfHours * 3600);
+        sprintf (query, "delete from objects where msg_id in (select id from messages %s", condition);
+        sqlite3_exec (db, query, nullptr, nullptr, nullptr);
+        numOfDeletedObjects = sqlite3_changes (db);
+        sprintf (query, "delete from messages %s", condition);
+        sqlite3_exec (db, query, nullptr, nullptr, nullptr);
+        numOfDeletedMessages = sqlite3_changes (db);
+        return std::tuple<int, int> (numOfDeletedMessages, numOfDeletedObjects);
+    }
+    return std::tuple<int, int> (0, 0);
+}

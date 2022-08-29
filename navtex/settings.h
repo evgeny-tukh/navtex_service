@@ -6,7 +6,7 @@
 #include "../tools/tools.h"
 
 struct Settings {
-    bool useSerial, forward, useNativeProtocol;
+    bool useSerial, forward, useNativeProtocol, expiryHours;
     std::string serialPort;
     uint32_t baud;
     uint8_t byteSize, parity, stopBits;

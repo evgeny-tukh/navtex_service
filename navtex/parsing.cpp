@@ -14,7 +14,6 @@
 
 extern MsgCb msgAddCb;
 extern MsgCb2 msgAddCb2;
-extern struct sqlite3 *db;
 
 typedef std::tuple<bool, double, double> OptionalPos;
 typedef std::tuple<char *, double, double> PosExtractResult;
